@@ -47,13 +47,12 @@ package
 			modeTF.text = Starling.current.context.driverInfo;
 			if (modeTF.text.indexOf("Software") != -1)
 			{
-				stopAndShowError();
+				showWarning();
 			}
 		}
 		
-		private function stopAndShowError():void 
+		private function showWarning():void 
 		{
-			_starling.stop();
 			warningMC.alpha = 1;
 			warningMC.visible = true;
 		}

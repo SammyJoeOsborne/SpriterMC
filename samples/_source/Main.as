@@ -54,13 +54,12 @@ package
 			modeTF.text = Starling.current.context.driverInfo;
 			if (modeTF.text.indexOf("Software") != -1)
 			{
-				stopAndShowError();
+				showWarning();
 			}
 		}
 		
-		private function stopAndShowError():void 
+		private function showWarning():void 
 		{
-			_starling.stop();
 			warningMC.alpha = 1;
 			warningMC.visible = true;
 		}
@@ -70,8 +69,8 @@ package
 			var $slider:Slider = new Slider();
 			$slider.direction = SliderDirection.VERTICAL;
 			$slider.height = 470;
-			$slider.minimum = -4;
-			$slider.maximum = 4;
+			$slider.minimum = -10;
+			$slider.maximum = 10;
 			$slider.tickInterval = 1;
 			$slider.snapInterval = .05;
 			$slider.getChildAt(1).width = 25;

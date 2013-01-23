@@ -92,7 +92,7 @@ package com.sammyjoeosborne.spriter
 			//if we aren't looping and play was called while the animation was on its last frame, restart it
 			if (!_loop && _currentKeyIndex == _lastFrameIndex)
 			{
-				_currentTime = mainKeys[_firstFrameIndex].time / _playbackSpeed; //this is gonna make currentTime 0 or the length of the animation, depending on which way the animation is playing
+				_currentTime = mainKeys[_firstFrameIndex].time; //this is gonna make currentTime 0 or the length of the animation, depending on which way the animation is playing
 				_currentKeyIndex = _firstFrameIndex;
 			}
 			_isPlaying = true;
@@ -114,7 +114,8 @@ package com.sammyjoeosborne.spriter
 		{
 			if (!_isPlaying || _playbackSpeed == 0 || !_spriterMC.isReady) return;
 			
-			$time *= 1000; //turn the additional time into milliseconds
+			//trace("adjusting for playback speed")
+			$time *= 1000 * _playbackSpeed; //turn the additional time into milliseconds, then adjust for proper playbackSpeed
 			_currentTime += $time * _playDirection;
 			normalizeCurrentTime();
 			//if we aren't looping and we're going over the length of the animation
@@ -122,7 +123,7 @@ package com.sammyjoeosborne.spriter
 			{
 				//if not looping, only update if current time is not past the last frame's time (whether we're playing forward or backward)
 				//if we're playing forward and the current time is >= the last keyframe's time, do not update. Just return.
-				if (_playDirection >= 0 && (_currentTime >= mainKeys[_lastFrameIndex].time / _playbackSpeed)) return;
+				if (_playDirection >= 0 && (_currentTime >= mainKeys[_lastFrameIndex].time)) return;
 				//if we're playing backward and current time is somehow less than 0, don't update. Just return.
 				else if (_playDirection < 0 && (_currentTime < 0)) return;
 				
@@ -208,7 +209,7 @@ package com.sammyjoeosborne.spriter
 			$value = ($value > mainKeys.length - 1) ? mainKeys.length - 1 : $value;
 			$value = ($value < 0) ? 0 : $value;
 			_currentKeyIndex = $value;
-			_currentTime = mainKeys[_currentKeyIndex].time / _playbackSpeed;
+			_currentTime = mainKeys[_currentKeyIndex].time;
 			updateVisuals();
 		}
 		
@@ -228,14 +229,6 @@ package com.sammyjoeosborne.spriter
 			//we'll always keep playback speed positive. If it's set to
 			//below 0, we just change _playDirection
 			_playbackSpeed = Math.abs($value);
-			
-			//It seems like it would make sense to scale the _currentTime back too, but it makes the animation
-			//jumpy, so I don't know...
-			/*if (_playbackSpeed != 0) {
-				_currentTime = _currentTime / _playbackSpeed;
-				//updateCurrentFrame();
-				//updateVisuals();
-			}*/
 			
 			//set first and last frame indexes
 			if ($value >= 0)
@@ -293,7 +286,7 @@ package com.sammyjoeosborne.spriter
 					$nextKey = $key[$nextOrPrev];
 					if ($nextKey)
 					{
-						$tweenFactor = (_currentTime - $key.time/_playbackSpeed) / ($nextKey.time/_playbackSpeed - $key.time/_playbackSpeed);
+						$tweenFactor = (_currentTime - $key.time) / ($nextKey.time - $key.time);
 						$parentTransform = new Transform($nextKey.x, $nextKey.y, $nextKey.angle, $nextKey.scaleX, $nextKey.scaleY);
 						
 						//spin should be derived from the key you're coming from, not the key you're going to
@@ -323,7 +316,7 @@ package com.sammyjoeosborne.spriter
 					$nextKey = $key[$nextOrPrev];
 					if ($nextKey)
 					{
-						$tweenFactor = (_currentTime - $key.time/_playbackSpeed) / ($nextKey.time/_playbackSpeed - $key.time/_playbackSpeed);
+						$tweenFactor = (_currentTime - $key.time) / ($nextKey.time - $key.time);
 						$parentTransform = new Transform($nextKey.x, $nextKey.y, $nextKey.angle, $nextKey.scaleX, $nextKey.scaleY);
 						//spin should be derived from the key you're coming from, not the key you're going to
 						//If _playDirection is backwards, we must derive the spin from the
@@ -367,7 +360,7 @@ package com.sammyjoeosborne.spriter
 		private function updateCurrentFrame():void
 		{
 			var $nextFrame:MainKey = getNextFrame(); //assign this so we're not processing the nextFrame each time
-			if (_currentTime == $nextFrame.time / _playbackSpeed)
+			if (_currentTime == $nextFrame.time)
 			{
 				_currentKeyIndex = $nextFrame.id;
 				return;
@@ -376,14 +369,14 @@ package com.sammyjoeosborne.spriter
 			//if playing forwards
 			if (_playDirection >= 0)
 			{
-				//trace("foreward ct: " + _currentTime + "  cf: " + getCurrentFrame().time / _playbackSpeed + " nf: " + $nextFrame.time /_playbackSpeed);
-				if (_currentTime >= getCurrentFrame().time / _playbackSpeed && _currentTime < $nextFrame.time / _playbackSpeed) return;
+				//trace("foreward ct: " + _currentTime + "  cf: " + getCurrentFrame().time  + " nf: " + $nextFrame.time );
+				if (_currentTime >= getCurrentFrame().time && _currentTime < $nextFrame.time) return;
 			}
 			//if playing backward
 			else
 			{
-				//trace("backward ct: " + _currentTime + "  cf: " + getCurrentFrame().time/_playbackSpeed + " nf: " + $nextFrame.time/_playbackSpeed);
-				if (_currentTime <= getCurrentFrame().time/_playbackSpeed && _currentTime > $nextFrame.time/_playbackSpeed)
+				//trace("backward ct: " + _currentTime + "  cf: " + getCurrentFrame().time + " nf: " + $nextFrame.time);
+				if (_currentTime <= getCurrentFrame().time && _currentTime > $nextFrame.time)
 				{
 					return;
 				}
@@ -402,9 +395,9 @@ package com.sammyjoeosborne.spriter
 			if (!_loop)
 			{
 				//if playing forward and we're going over length, set current time to length and stop playing
-				if (_playDirection >= 0 && _currentTime >= totalTime / _playbackSpeed)
+				if (_playDirection >= 0 && _currentTime >= totalTime)
 				{
-					_currentTime = mainKeys[_lastFrameIndex].time / _playbackSpeed;
+					_currentTime = mainKeys[_lastFrameIndex].time;
 					_currentKeyIndex = _lastFrameIndex;
 					_isPlaying = false;
 					_animationEnded = true;
@@ -412,7 +405,7 @@ package com.sammyjoeosborne.spriter
 				//if playing backward and current time is going below zero, set current time to zero and stop playback
 				else if (_playDirection < 0 && _currentTime <= 0)
 				{
-					_currentTime = mainKeys[_lastFrameIndex].time / _playbackSpeed;
+					_currentTime = mainKeys[_lastFrameIndex].time;
 					_currentKeyIndex = _lastFrameIndex;
 					_isPlaying = false;
 					_animationEnded = true;//TODO: broadcast animation complete event
@@ -421,18 +414,18 @@ package com.sammyjoeosborne.spriter
 			//if we are looping
 			else
 			{
-				//trace(totalTime / playbackSpeed);
+				//trace(totalTime);
 				//if playing forward and time is past length, set current time to what it should be
 				if (_playDirection >= 0) 
 				{
 					
 					
-					while (_currentTime > (totalTime / _playbackSpeed))
+					while (_currentTime > totalTime)
 					{
-						_currentTime = _currentTime - totalTime / _playbackSpeed;
+						_currentTime = _currentTime - totalTime;
 					}
 					
-					//if (_currentTime > totalTime / _playbackSpeed)	_currentTime = _currentTime - totalTime / _playbackSpeed;	
+					//if (_currentTime > totalTime)	_currentTime = _currentTime - totalTime;	
 					
 				}
 				//if playing backward and time is below 0, set current time to what it should be
@@ -441,9 +434,9 @@ package com.sammyjoeosborne.spriter
 					if (_currentTime <= 0)
 					{
 						//trace("ct: " + _currentTime + " tt: " + totalTime + " pbs: " + _playbackSpeed);
-						_currentTime = totalTime / _playbackSpeed + _currentTime;
+						_currentTime = totalTime + _currentTime;
 					}
-					else if (_currentTime > totalTime / _playbackSpeed) _currentTime = totalTime / _playbackSpeed;
+					else if (_currentTime > totalTime) _currentTime = totalTime;
 				}
 			}
 		}

@@ -120,27 +120,27 @@ package
 			
 			
 			_monster1.x = 100;
-			_monster1.y = 340;
+			_monster1.y = 320;
 			_monster1.scaleX = _monster1.scaleY = .5;
 			
 			_monster2.x = 300;
-			_monster2.y = 340;
+			_monster2.y = 320;
 			_monster2.scaleX = _monster2.scaleY = .5;
 			
 			_monster3.x = 520;
-			_monster3.y = 340;
+			_monster3.y = 320;
 			_monster3.scaleX = _monster3.scaleY = .5;
 			
 			_hero1.x = 100;
-			_hero1.y = 680;
+			_hero1.y = 660;
 			_hero1.scaleX = _hero1.scaleY = .5;
 			
 			_hero2.x = 300;
-			_hero2.y = 680;
+			_hero2.y = 660;
 			_hero2.scaleX = _hero2.scaleY = .5;
 			
 			_hero3.x = 520;
-			_hero3.y = 680;
+			_hero3.y = 660;
 			_hero3.scaleX = _hero3.scaleY = .5;
 			
 			addEventListener(Event.ENTER_FRAME, onEnterFrameHandler);
