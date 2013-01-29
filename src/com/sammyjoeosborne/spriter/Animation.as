@@ -44,11 +44,16 @@ package com.sammyjoeosborne.spriter
 	import starling.display.QuadBatch;
 	import starling.display.Sprite;
 	
-	/**
-	 * ...
+	/** <p>Used by SpriterMC (you shouldn't ever use it, really), Animation is the meat of a SpriterMC. You should never really need to interact with an Animation
+	 * directly. A SpriterMC can contain many Animations, such as "walk", "run", "jump", etc. These are created
+	 * in Spriter.</p>
+	 * <p>You can switch between them using</p>
+	 * <pre>mySpriterMC.setAnimationByName("run", true);</pre>
+	 * or
+	 * <pre>mySpriterMC.setAnimationByID(1, true);</pre>
+	 * 
 	 * @author Sammy Joe Osborne
 	 */
-	
 	public class Animation extends Sprite implements IAnimatable
 	{
 		public var RADIAN_IN_DEGREE:Number = 0.0174532925; //using this is slightly faster than doing PI/180
@@ -186,7 +191,7 @@ package com.sammyjoeosborne.spriter
 				if ($frameID < mainKeys.length - 1)
 					return mainKeys[$frameID + 1].time - mainKeys[$frameID].time;
 				else
-					return totalTime - mainKeys[$frameID];
+					return totalTime - mainKeys[$frameID].time;
 			}
 			else
 			{
@@ -202,7 +207,7 @@ package com.sammyjoeosborne.spriter
 		 ***************************/
 		
 		public function get currentTime():int { return _currentTime };
-		public function set currentTime($value:int) { _currentTime = $value }
+		public function set currentTime($value:int):void { _currentTime = $value }
 		
 		public function get currentFrame():int { return _currentKeyIndex; }
 		public function set currentFrame($value:int):void {

@@ -2,7 +2,7 @@ package com.sammyjoeosborne.spriter.utils
 {
 	import flash.geom.Point;
 	/**
-	 * ...
+	 * Just some functions needed internally.
 	 * @author Sammy Joe Osborne
 	 */
 	public class TransformUtils 
@@ -17,6 +17,16 @@ package com.sammyjoeosborne.spriter.utils
 		//tweenFactor is essentially the position on that line from which we should get values.
 		//Calculated by (currentTime - timeA)/(timeB - timeA), which should
 		//calculate once per frame and passed to the lerp function.
+		/**
+		 * Linear interpolation. Will need to come up with other methods once other Tween types are integrated into Spriter...
+		 * Imagine a tween as a function of values. In linear it's a straight line, in quadratic it's curved, etc.
+		 * tweenFactor is essentially the position on that line from which we should get values.
+		 * Calculated by (currentTime - timeA)/(timeB - timeA)
+		 * @param	$a the first value
+		 * @param	$b the second value
+		 * @param	$tweenFactor
+		 * @return
+		 */
 		public static function lerp($a:Number, $b:Number, $tweenFactor:Number):Number
 		{
 			return $a + ($b - $a) * $tweenFactor;

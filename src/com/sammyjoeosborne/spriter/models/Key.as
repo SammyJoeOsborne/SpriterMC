@@ -2,8 +2,6 @@ package com.sammyjoeosborne.spriter.models
 {
 	import flash.geom.Matrix;
 	import flash.geom.Point;
-	import starling.display.Quad;
-	import starling.display.Sprite;
 	/**
 	 * 12/9/2012 3:52 PM
 	 * @author Sammy Joe Osborne

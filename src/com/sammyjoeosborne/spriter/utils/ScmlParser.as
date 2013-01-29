@@ -1,6 +1,5 @@
 package com.sammyjoeosborne.spriter.utils 
 {
-	import com.sammyjoeosborne.spriter.AnimationData;
 	import com.sammyjoeosborne.spriter.data.ScmlData;
 	import com.sammyjoeosborne.spriter.models.AnimationData;
 	import com.sammyjoeosborne.spriter.models.BoneRef;
@@ -12,15 +11,13 @@ package com.sammyjoeosborne.spriter.utils
 	import com.sammyjoeosborne.spriter.models.Timeline;
 	import flash.geom.Point;
 
-	import com.sammyjoeosborne.spriter.ScmlData;
-	import com.sammyjoeosborne.spriter.Timeline;
 	import flash.events.ErrorEvent;
 	import flash.events.Event;
 	import flash.net.URLLoader;
 	import flash.net.URLRequest;
 	import starling.events.EventDispatcher;
 	/**
-	 * 1/15/2013 9:13 PM
+	 * For internal use only, really. Loads and parses a provided SCML file path and creates the requisite ScmlData and gets the whole TexturePack process started.
 	 * @author Sammy Joe Osborne
 	 */
 	public class ScmlParser extends EventDispatcher

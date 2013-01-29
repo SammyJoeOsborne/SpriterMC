@@ -91,17 +91,6 @@ package com.sammyjoeosborne.spriter.data
 		
 		public function get isReady():Boolean { return _isReady; }
 		public function set isReady(value:Boolean):void { _isReady = value; }
-		
-		internal function getAnimation($name:String):Animation
-		{
-			var $length:uint = _animationDatas.length;
-			for (var i:int = 0; i < $length; i++)
-			{
-				if (_animationDatas[i].name == $name) return _animationDatas[i];
-			}
-			
-			throw new Error("Animation \"" + $name + "\" not found.");
-		}
 	}
 
 }

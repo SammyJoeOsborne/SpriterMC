@@ -42,8 +42,20 @@ package com.sammyjoeosborne.spriter
 	import starling.events.EventDispatcher;
 	import starling.textures.TextureAtlas;
 	
-	/**
-	 * 1/15/2013 7:06 PM
+	/** The SpriterMCFactory is responsible for generating all new SpriterMC's and any subsequent
+	 * instances of a particular SpriterMC.
+	 *
+	 *  <p>The SpriterMCFactory allows the creation and any subsequent instances of a SpriterMC to
+	 * be generated in an efficient manner that minimizes overhead and memory usage. You should never
+	 * create a SpriterMC on your own. You should always use the createSpriterMC to define new
+	 * SpriterMC's</p>
+	 * 
+	 * <pre>var heroSpriterMC:SpriterMC = SpriterMCFactory.createSpriterMC("hero", "xml/hero.scml");</pre>
+	 * 
+	 * <p>And generateInstance to retrieve further instances of a previously defined
+	 * SpriterMC.</p>
+	 * <pre>var secondHero:SpriterMC = SpriterMCFactory.generateInstance("hero");</pre>
+	 * 
 	 * @author Sammy Joe Osborne
 	 */
 	public class SpriterMCFactory extends EventDispatcher
@@ -54,16 +66,19 @@ package com.sammyjoeosborne.spriter
 		private static var _scmlDatas:Vector.<ScmlData> = new Vector.<ScmlData>();
 		private static var _texturePacks:Vector.<TexturePack> = new Vector.<TexturePack>();
 		
+		
 		public function SpriterMCFactory() 
 		{
 			throw new Error("Do not instantiate SpriterMCFactory class. Only use its static methods.");
 		}
 
 		/**
-		 * Defines a new SpriterMC generated from the SCML file specified in $scmlPath
-		 * @param	$scmlPath The path to the SCML file used to create this SpriterMC.
+		 * Defines a new SpriterMC generated from the SCML file specified in $scmlPath. The SCML file is loaded, parsed, and if you do not provide a TextureAtlas, all individual assets will be loaded and turned into a TextureAtlas for you.
 		 * @param	$name This is the unique identifying name for a new SpriterMC type, such as "Hero".
-		 * @param	$returnInstance Set to false to avoid creating a SpriterMC instance if you do not need one yet
+		 * @param	$scmlPath The path to the SCML file used to create this SpriterMC.
+		 * @param	$textureAtlas An existing TextureAtlas you provide to grab the assets listed in the SCML file. HIGHLY RECOMMENDED. If null, a TextureAtlas is generated for you by loading all individual assets referenced in the provided SCML file.
+		 * @param	$onReadyCallback This is just a shortcut to add a callback function you would like to call when this SpriterMC broadcasts that it is ready. This is equivilent to saying <pre>mySpriterMC.addEventListener(SpriterMC.SPRITER_MC_READY, myReadyHandler);</pre>
+		 * @param	$returnInstance Set to false to avoid creating a SpriterMC instance if you do not need one yet (for instance, set to false if you are creating all your SpriterMC's up front just to get them loaded)
 		 * @return  A new instance of this new SpriterMC; null if $returnInstance is false
 		 * @throws  Error if the name is not unique
 		 */
@@ -130,7 +145,7 @@ package com.sammyjoeosborne.spriter
 		}
 		
 		/**
-		 * Returns a Vector<String> of names of all TexturePacks that exist
+		 * Returns a Vector of names of all TexturePacks that exist
 		 * @return A Vector of Strings representing the TexturePack names that exist
 		 */
 		public static function getTexturePackNames():Vector.<String>
@@ -145,7 +160,7 @@ package com.sammyjoeosborne.spriter
 		}
 		
 		/**
-		 * Returns a Vector<String> of names representing all ScmlData that exist
+		 * Returns a Vector of the names representing all ScmlData that exist
 		 * @return A Vector of Strings representing the ScmlData names that exist
 		 */
 		public static function getScmlDataNames():Vector.<String> 
@@ -213,9 +228,9 @@ package com.sammyjoeosborne.spriter
 		 */
 		public static function addTexturePack($texturePack:TexturePack):void
 		{
-			if (!nameExists($scmlData.name, getScmlDataNames()))
+			if (!nameExists($texturePack.name, getTexturePackNames()))
 			{
-				_scmlDatas.push($scmlData);
+				_texturePacks.push($texturePack);
 			}
 			else throw new Error("Cannot add TexturePack \"" + $texturePack.name + "\". A TexturePack by that name already exists.");
 		}

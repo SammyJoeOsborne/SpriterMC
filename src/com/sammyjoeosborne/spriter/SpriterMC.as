@@ -43,10 +43,26 @@ package com.sammyjoeosborne.spriter
 	import starling.events.Event;
 	import starling.textures.Texture;
 
-	/**
-	 * ...
+	/** SpriterMC is engineered to mimick the Starling MovieClip class closely, with a few differences.
+	 *  A SpriterMC can be played back fluidly at any speed and with minimal memory overhead since
+	 * all motion is generated via bone data.<br/>
+	 * 
+	 * <p><b>You should never create a SpriterMC directly</b><br/>
+	 * Instead, you should use the SpriterMCFactory.</p>
+	 * 
+	 * <p>A SpriterMC also contains multiple Animations. You can think of a SpriterMC as a character,
+	 * and the various Animations within as the many actions that charater might take. For example,
+	 * you may have a character with a "Run" Animation, a "jump" Animation, and a "idle" Animation.
+	 * <br/>
+	 * These various Animations are generated from the SCML file you provide the SpriterMC factory.
+	 * You use Spriter to create multiple Animations within the same file.</p>
+	 * 
+	 * <p>To switch between the various Animations, you can use the setAnimationByName and setAnimationByID functions.</p>
+	 * For example, the following would switch to the run animation and tell it to play immediately.
+	 * <pre>mySpriterMC.setAnimationByName("run", true);</pre>
+	 * 
+	 * 
 	 * @author Sammy Joe Osborne
-	 * 1/12/2013 2:32 PM
 	 */
 	public class SpriterMC extends Sprite implements IAnimatable
 	{
@@ -63,7 +79,12 @@ package com.sammyjoeosborne.spriter
 		
 		private var _commandQueue:Vector.<Command> = new Vector.<Command>(); ///Queues commands (play, pause, etc.) issued before the SpriterMC is ready and calls them once it is ready
 		private var _isReady:Boolean = false;
-		
+		/**
+		 * You should never call this method. Only the SpriterMCFactory should be responsible for creating new SpriterMCs.
+		 * @param	$scmlData - the already-parsed SCML data
+		 * @param	$texturePack - the TexturePack holding the various assets and information (TextureAtlas) needed to represent this SpriterMC visually.
+		 * @param	$onReadyCallback - an optional function to be called when this SpriterMC is fully loaded and ready
+		 */
 		public function SpriterMC($scmlData:ScmlData, $texturePack:TexturePack, $onReadyCallback:Function = null)
 		{
 			_scmlData = $scmlData;
@@ -134,12 +155,18 @@ package com.sammyjoeosborne.spriter
 		 **********************/
 		public function get isReady():Boolean { return _isReady; }
 		
+		/**
+		 * @return Returns a Vector of Vector(Image), which is the current set of Images generated from the TexturePack
+		 */
 		public function get graphics():Vector.<Vector.<Image>>{ return _graphics; }
 		
 		/**********************************************************************
 		 * These just delegate the same calls to the current animation 
 		 **********************************************************************
 		*/
+		/**
+		 * Plays or resumes the SpriterMC's current Animation (the first listed in the SCML by default) from whatever current frame it is on
+		 */
 		public function play():void
 		{
 			
@@ -150,6 +177,9 @@ package com.sammyjoeosborne.spriter
 			else _commandQueue.push(new Command(play));
 		}
 		
+		/**
+		 * Pauses the SpriterMC's current Animation
+		 */
 		public function pause():void
 		{
 			if(_isReady && _currentAnimation)
@@ -157,6 +187,9 @@ package com.sammyjoeosborne.spriter
 			else _commandQueue.push(new Command(pause));
 		}
 		
+		/**
+		 * Stops the SpriterMC's current Animation and sets its current frame to 1 (or the last frame, if it is currently playing in reverse)
+		 */
 		public function stop():void
 		{
 			if(_isReady && _currentAnimation)
@@ -164,6 +197,10 @@ package com.sammyjoeosborne.spriter
 			else _commandQueue.push(new Command(stop));
 		}
 		
+		/**
+		 * Used by a Juggler to advance the playhead of the SpriterMC's current Animation. If playbackSpeed is currently 0, nothing happens.
+		 * @param	$time The amount of time to increase the playhead. This is multiplied by the playbackSpeed
+		 */
 		public function advanceTime($time:Number):void 
 		{
 			if (_isReady && _currentAnimation)
@@ -172,6 +209,9 @@ package com.sammyjoeosborne.spriter
 			}
 		}
 		
+		/**
+		 * Returns the current playbackSpeed for the SpriterMC's current Animation. Note: the playbackSpeed for other Animations might be different. They can each have their own speed. This only returns for the CURRENT set Animation
+		 */
 		public function get playbackSpeed():Number
 		{
 			if (_isReady && _currentAnimation)
@@ -180,6 +220,9 @@ package com.sammyjoeosborne.spriter
 			} else throw new Error("Cannot determine playbackSpeed yet. SpriterMC is not ready.")
 		}
 		
+		/**
+		 * Sets the playback speed for the SpriterMC's current Animation. Note: only effects the current Animation.
+		 */
 		public function set playbackSpeed($value:Number):void
 		{
 			if(_isReady && _currentAnimation)
@@ -198,7 +241,9 @@ package com.sammyjoeosborne.spriter
 			else _commandQueue.push(new Command(setCurrentFrame, [$value]));
 		}
 		
-		
+		/**
+		 * Returns the current key frame
+		 */
 		public function get currentFrame():int
 		{
 			if(_isReady && _currentAnimation)
@@ -230,13 +275,18 @@ package com.sammyjoeosborne.spriter
 			else _commandQueue.push(new Command(setCurrentFrame, [$value]));
 		}
 		
+		/**
+		 * Only for non-looping Animations. Returns if the current Animation has completed a full play through and reached its last frame
+		 */
 		public function get isComplete():Boolean
 		{
 			if(_isReady && _currentAnimation)
 				return _currentAnimation.isComplete;
 			else return false;
 		}
-		
+		/**
+		 * Allows you to detect if the SpriterMC's current Animation is currently playing
+		 */
 		public function get isPlaying():Boolean
 		{
 			if(_isReady && _currentAnimation)
@@ -257,6 +307,9 @@ package com.sammyjoeosborne.spriter
 			else return false;
 		}
 		
+		/**
+		 * Allows you to change the current Animations looping status
+		 */
 		public function set loop($value:Boolean):void
 		{
 			if(_isReady && _currentAnimation)
@@ -287,6 +340,9 @@ package com.sammyjoeosborne.spriter
 			else throw new Error("Cannot determine originallyLooped yet. SpriterMC is not ready.")
 		}
 		
+		/**
+		 * Returns the number of key frames comprising the SpriterMC's current Animation
+		 */
 		public function get numFrames():uint
 		{
 			if (_isReady && _currentAnimation)
@@ -299,7 +355,7 @@ package com.sammyjoeosborne.spriter
 		 *********************/
 		/**
 		 * Applies a new set of textures to this SpriterMC instance.
-		 * @throws  Error if this texture pack doesn't have the correct filestructure expected from this SpriterMC's SCML
+		 * @throws  Error if this texture pack doesn't have the correct filestructure expected from this SpriterMC's SCML (TODO: not actually checking if TexturePacks are valid yet)
 		 * @param	$texturePack The TexturePack to apply
 		 * @param	$disposeOld Disposes of all textures in the previous TexturePack. You must be sure these textures aren't being used elsewhere
 		 */
@@ -354,11 +410,12 @@ package com.sammyjoeosborne.spriter
 		 * @param	$frameID
 		 * @return  A Vector of all Sounds set to play on the specified frame
 		 */
-		public function getFrameSound($frameID:uint):Vector.<Sound>
+		/*public function getFrameSound($frameID:uint):Vector.<Sound>
 		{
 			//TODO: return sound once sounds are supported
 			//return currentAnimation.getFrameSounds($frameID);
-		}
+			
+		}*/
 		 
 		/**
 		 * Returns the current Animation this SpriterMC is playing
@@ -366,11 +423,21 @@ package com.sammyjoeosborne.spriter
 		 */
 		public function get currentAnimation():Animation { return _currentAnimation; }
 		
+		/**
+		 * Returns the name of this SpriterMC. This is the name registered in the SpriterMCFactory, used if you want to generate new instances
+		 * of a SpriterMC.
+		 */
 		public function get spriterName():String { return _spriterName; }
 		public function set spriterName(value:String):void { _spriterName = value; }
 		
 		public function get texturePack():TexturePack { return _texturePack; }
 		
+		/**
+		 * Allows you to switch between the various Animations in this SpriterMC
+		 * @param	$name - the name of the Animation to switch to, such as "Run", "walk", "jump", etc.
+		 * @param	$playImmediately - whether the Animation should play now or not
+		 * @throws  An Error if an animation by that name is not found
+		 */
 		public function setAnimationByName($name:String, $playImmediately:Boolean = true):void
 		{
 			if (_isReady && _currentAnimation)
@@ -392,6 +459,12 @@ package com.sammyjoeosborne.spriter
 			}
 		}
 		
+		/**
+		 * Same as setAnimationByName, except using an Animation's ID number. This is a zero based number, appearing in order in the SCML file
+		 * @param	$id - The id of the animation to switch to
+		 * @param	$playImmediately
+		 * @throws  An Error if an animation by that id is not found
+		 */
 		public function setAnimationByID($id:uint, $playImmediately:Boolean = false)
 		{
 			if(_isReady && _currentAnimation)
@@ -405,7 +478,7 @@ package com.sammyjoeosborne.spriter
 				throw new Error("Animation with id " + $id + " does not exist. Id out of range.");
 				}
 			else {
-				_commandQueue.push(new Command(setAnimationByName, [$name, $playImmediately]));
+				_commandQueue.push(new Command(setAnimationByID, [$id, $playImmediately]));
 			}
 		}
 		
@@ -425,6 +498,9 @@ package com.sammyjoeosborne.spriter
 			}
 		}
 		
+		/**
+		 * @return A Vector(String) containing all the Animations this SpriterMC contains such as "walk", "run", "jump." Useful if you need to know your options.
+		 */
 		public function getAnimationNames():Vector.<String>
 		{
 			var $namesVec:Vector.<String> = new Vector.<String>();
@@ -435,6 +511,11 @@ package com.sammyjoeosborne.spriter
 			return $namesVec;
 		}
 		
+		/**
+		 * Disposes of this SpriterMC instance. The ScmlData and TexturePack will still exist in the SpriterMCFactory in case further instances of this
+		 * type need to be generated later.
+		 * To dispose of the ScmlData and TexturePack, use the various dispose methods of the SpriterMCFactory.
+		 */
 		override public function dispose():void
 		{
 			stop();

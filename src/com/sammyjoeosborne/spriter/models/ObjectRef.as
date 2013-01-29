@@ -1,6 +1,5 @@
 package com.sammyjoeosborne.spriter.models 
 {
-	import starling.display.Image;
 	/**
 	 * ...
 	 * @author Sammy Joe Osborne
