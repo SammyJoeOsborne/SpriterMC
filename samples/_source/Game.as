@@ -80,15 +80,20 @@ package
 		{
 			
 			_monster1 = SpriterMCFactory.createSpriterMC("monster", "xml/monster.scml", _textureAtlas, spriterReadyHandler, true);
+			_monster1.loop = false;
 			_monster1.currentFrame = 4;
 			_monster1.play();
+			//This is just an example to show how a non-looping SpriterMC Animation fires an Event.COMPLETE when it reaches its last frame
+			_monster1.addEventListener(Event.COMPLETE, onAnimationCompleteHandler);
 			
 			_monster2 = SpriterMCFactory.generateInstance("monster", spriterReadyHandler);
 			_monster2.setAnimationByName("Posture");
+			_monster2.loop = true; //NOTE: we must set loop to true AFTER we set the current Animation, otherwise we'd be setting loop for the previous Animation.
 			_monster2.playbackSpeed = 2;
 			_monster2.play();
 			
 			_monster3 = SpriterMCFactory.generateInstance("monster", spriterReadyHandler);
+			_monster3.loop = true;
 			_monster3.playbackSpeed = -.75;
 			_monster3.play();
 			
@@ -144,6 +149,13 @@ package
 			_hero3.scaleX = _hero3.scaleY = .5;
 			
 			addEventListener(Event.ENTER_FRAME, onEnterFrameHandler);
+		}
+		
+		//This is just an example to show that the Event.COMPLETE event fires after a non-looping animation finishes playing
+		private function onAnimationCompleteHandler($e:Event):void 
+		{
+			trace("Animation complete: " + SpriterMC($e.target).currentAnimation.name);
+			SpriterMC($e.target).play();
 		}
 		
 		private function duplicateCharacters():void

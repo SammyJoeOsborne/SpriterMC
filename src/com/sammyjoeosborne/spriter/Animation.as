@@ -43,6 +43,7 @@ package com.sammyjoeosborne.spriter
 	import starling.display.Image;
 	import starling.display.QuadBatch;
 	import starling.display.Sprite;
+	import starling.events.Event;
 	
 	/** <p>Used by SpriterMC (you shouldn't ever use it, really), Animation is the meat of a SpriterMC. You should never really need to interact with an Animation
 	 * directly. A SpriterMC can contain many Animations, such as "walk", "run", "jump", etc. These are created
@@ -52,10 +53,12 @@ package com.sammyjoeosborne.spriter
 	 * or
 	 * <pre>mySpriterMC.setAnimationByID(1, true);</pre>
 	 * 
+	 * If an Animation is not looping, it will dispatch Event.COMPLETE once it has reached its last frame (last frame is dependant on which direction playback is playing).
 	 * @author Sammy Joe Osborne
 	 */
 	public class Animation extends Sprite implements IAnimatable
 	{
+		
 		public var RADIAN_IN_DEGREE:Number = 0.0174532925; //using this is slightly faster than doing PI/180
 		
 		private var _animationData:AnimationData;
@@ -76,9 +79,10 @@ package com.sammyjoeosborne.spriter
 		
 		public function Animation($animationData:AnimationData, $spriterMC:SpriterMC)
 		{
-			_animationData = $animationData;
-			this.name = _animationData.name;
 			_spriterMC = $spriterMC;
+			_animationData = $animationData;
+			_loop = _animationData.loop;
+			this.name = _animationData.name;
 			init();
 		}
 		
@@ -400,20 +404,14 @@ package com.sammyjoeosborne.spriter
 			if (!_loop)
 			{
 				//if playing forward and we're going over length, set current time to length and stop playing
-				if (_playDirection >= 0 && _currentTime >= totalTime)
+				//or if playing backward and current time is going below zero, set current time to zero and stop playback
+				if ((_playDirection >= 0 && _currentTime >= totalTime) || (_playDirection < 0 && _currentTime <= 0))
 				{
-					_currentTime = mainKeys[_lastFrameIndex].time;
+					_currentTime = mainKeys[_lastFrameIndex].time; //this will either be animation length, or zero, depending on playback direction
 					_currentKeyIndex = _lastFrameIndex;
 					_isPlaying = false;
 					_animationEnded = true;
-				}
-				//if playing backward and current time is going below zero, set current time to zero and stop playback
-				else if (_playDirection < 0 && _currentTime <= 0)
-				{
-					_currentTime = mainKeys[_lastFrameIndex].time;
-					_currentKeyIndex = _lastFrameIndex;
-					_isPlaying = false;
-					_animationEnded = true;//TODO: broadcast animation complete event
+					_spriterMC.dispatchEventWith(Event.COMPLETE);
 				}
 			}
 			//if we are looping

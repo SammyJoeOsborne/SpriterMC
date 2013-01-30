@@ -3,6 +3,7 @@
  *
  *   @author Sammy Joe Osborne
  *   http://www.sammyjoeosborne.com
+ *	 http://www.sammyjoeosborne.com/SpriterMC
  *   https://github.com/SammyJoeOsborne/SpriterMC
  */
 
@@ -57,6 +58,8 @@ package com.sammyjoeosborne.spriter
 	 * These various Animations are generated from the SCML file you provide the SpriterMC factory.
 	 * You use Spriter to create multiple Animations within the same file.</p>
 	 * 
+	 * A SpriterMC dispatches Event.COMPLETE when a non-looping Animation has reached its last frame.
+	 * 
 	 * <p>To switch between the various Animations, you can use the setAnimationByName and setAnimationByID functions.</p>
 	 * For example, the following would switch to the run animation and tell it to play immediately.
 	 * <pre>mySpriterMC.setAnimationByName("run", true);</pre>
@@ -79,6 +82,7 @@ package com.sammyjoeosborne.spriter
 		
 		private var _commandQueue:Vector.<Command> = new Vector.<Command>(); ///Queues commands (play, pause, etc.) issued before the SpriterMC is ready and calls them once it is ready
 		private var _isReady:Boolean = false;
+		
 		/**
 		 * You should never call this method. Only the SpriterMCFactory should be responsible for creating new SpriterMCs.
 		 * @param	$scmlData - the already-parsed SCML data
@@ -314,7 +318,7 @@ package com.sammyjoeosborne.spriter
 		{
 			if(_isReady && _currentAnimation)
 				_currentAnimation.loop = $value;
-			else throw new Error("Cannot set loop. SpriterMC is not ready.")
+			else _commandQueue.push(new Command(setLoop, [$value]));
 		}
 		
 		/**
