@@ -33,15 +33,18 @@
 package com.sammyjoeosborne.spriter.data 
 {
 	import com.emibap.textureAtlas.DynamicAtlas;
+	import com.sammyjoeosborne.spriter.load.SimpleAssetLoader;
+	import com.sammyjoeosborne.spriter.load.SimpleLoader;
+	import com.sammyjoeosborne.spriter.load.SimpleLoadItem;
 	import com.sammyjoeosborne.spriter.models.File;
 	import com.sammyjoeosborne.spriter.models.Folder;
 	import com.sammyjoeosborne.spriter.utils.ScmlParser;
-	import com.stimuli.loading.BulkLoader;
-	import com.stimuli.loading.loadingtypes.LoadingItem;
 	import flash.display.Bitmap;
 	import flash.display.DisplayObject;
 	import flash.display.DisplayObjectContainer;
 	import flash.display.MovieClip;
+	import flash.net.URLLoader;
+	import flash.net.URLRequest;
 	import starling.events.Event;
 	import starling.display.Image;
 	import starling.events.EventDispatcher;
@@ -166,7 +169,7 @@ package com.sammyjoeosborne.spriter.data
 			if (!_isReady)
 			{
 				//I'm not a fan of BulkLoader...this is temporary until I can write a similar load manager to the proprietary one we use at my work. It's the shizzle.
-				var $bulkLoader:BulkLoader = new BulkLoader();
+				var $simpleLoader:SimpleAssetLoader = new SimpleAssetLoader();
 				var $folder:Folder;
 				var $foldersLength:uint = _folders.length;
 				var $filesLength:uint;
@@ -179,12 +182,13 @@ package com.sammyjoeosborne.spriter.data
 					for (var j:int = 0; j < $filesLength; j++) 
 					{
 						$id = $folder.files[j].name;
-						$bulkLoader.add($folder.files[j].name, { "id":$id } ).addEventListener(Event.COMPLETE, itemCompleteHandler);
+						$simpleLoader.addItem($folder.files[j].name, { "id":$id } );
+						$simpleLoader.addEventListener(Event.COMPLETE, itemCompleteHandler);
 					}
 				}
 				
-				$bulkLoader.addEventListener(BulkLoader.COMPLETE, allFilesLoadedHandler);
-				$bulkLoader.start();
+				$simpleLoader.addEventListener(SimpleAssetLoader.ALL_ITEMS_COMPLETE, allFilesLoadedHandler);
+				$simpleLoader.startLoad();
 			}
 			else throw new Error("TexturePack " + _name + " already loaded all textures.");
 		}
@@ -192,7 +196,7 @@ package com.sammyjoeosborne.spriter.data
 		private function allFilesLoadedHandler($e:*):void 
 		{
 			//TODO: turn loaded files into one big Texture and create a texture atlas out of it
-			//trace("TexturePack " + _name + " loaded all textures successfully.");
+			trace("TexturePack " + _name + " loaded all textures successfully.");
 			createTextureAtlas();
 		}
 		
@@ -223,11 +227,12 @@ package com.sammyjoeosborne.spriter.data
 		
 		private function itemCompleteHandler($e:*):void 
 		{
-			var $loadingItem:LoadingItem = LoadingItem($e.target);
-			var $id:String = getFileNameWithoutExtension($loadingItem.id);
+			var $simpleLoader:SimpleLoader = $e.data as SimpleLoader;
+			var $simpleLoadItem:SimpleLoadItem = $simpleLoader.simpleLoadItem;
+			var $id:String = getFileNameWithoutExtension($simpleLoadItem.data.id);
 			var $bitmapMC:MovieClip = new MovieClip();
 			$bitmapMC.name = $id;
-			$bitmapMC.addChild(Bitmap($loadingItem.content));
+			$bitmapMC.addChild(Bitmap($simpleLoader.content));
 			_loadedAssets.push($bitmapMC);
 		}
 		

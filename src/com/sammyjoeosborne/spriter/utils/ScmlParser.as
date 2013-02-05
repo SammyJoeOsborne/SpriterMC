@@ -284,9 +284,10 @@ package com.sammyjoeosborne.spriter.utils
 		
 		public function loadSCML($path:String)
 		{
-			var $loader:URLLoader = new URLLoader(new URLRequest($path));
+			var $loader:URLLoader = new URLLoader();
 			$loader.addEventListener(Event.COMPLETE, onSCMLComplete);
 			$loader.addEventListener(ErrorEvent.ERROR, onError);
+			$loader.load(new URLRequest($path));
 		}
 		
 		private function onError($e:Event):void
