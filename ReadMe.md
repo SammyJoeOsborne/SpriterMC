@@ -11,6 +11,8 @@ SpriterMC is a Starling implementation for importing skeletal (and non-skeletal)
 * Accepts a preloaded TextureAtlas for assets, or loads the individual assets referenced in the SCML file and dynamically generates a TextureAtlas for you (uses a modified version of Emiliano Angelini's [Dynamic Texture Atlas Generator] (https://github.com/emibap/Dynamic-Texture-Atlas-Generator))
 * Effortlessly create multiple instances of existing SpriterMCs with little to no additional memory or processing (100 instances at 60FPS in the [Benchmark] (http://www.sammyjoeosborne.com/SpriterMC/Benchmark.html)
 * Framerate-irrelevant playback features ability to play and adjust your SpriterMC's playbackSpeed in real time, even reversing play direction altogether (by setting playbackSpeed to a negative)
+* NEW: Add Sounds to specific frames
+* NEW: Add callbacks to specific frames
 * Switch between Animations in the SpriterMC effortlessly (mySpriterMC.setAnimationByName("Running");)
 * Switch out TexturePacks at runtime to completely change the graphics used (TexturePack must contain the same folder/file structure as the SpriterMC's original TexturePack)
 * Friendly and familiar API featuring most (though not all) of the same methods of the [Starling MovieClip] (http://doc.starling-framework.org/core/starling/display/MovieClip.html)
@@ -19,7 +21,6 @@ SpriterMC is a Starling implementation for importing skeletal (and non-skeletal)
 ### TODO List
 * Add ability to switch fluidly between Animations (it will tween between them instead of instantly switching as it currently does)
 * Optimize and cleanup code
-* Add ability to tie Sounds and Event dispatches to frames
 * Add better Error checking
 * Add ability to draw bones as actual DisplayObjects (for debugging purposes)
 * Possibly add an adjustable rootPath variable to correct any relative pathing issues from the SWF when loading individual assets

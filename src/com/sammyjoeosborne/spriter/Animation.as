@@ -33,12 +33,14 @@ package com.sammyjoeosborne.spriter
 {	
 	import com.sammyjoeosborne.spriter.models.AnimationData;
 	import com.sammyjoeosborne.spriter.models.BoneRef;
+	import com.sammyjoeosborne.spriter.models.Command;
 	import com.sammyjoeosborne.spriter.models.Key;
 	import com.sammyjoeosborne.spriter.models.MainKey;
 	import com.sammyjoeosborne.spriter.models.ObjectRef;
 	import com.sammyjoeosborne.spriter.models.Timeline;
 	import com.sammyjoeosborne.spriter.models.Transform;
 	import flash.media.Sound;
+	import flash.media.SoundChannel;
 	import starling.animation.IAnimatable;
 	import starling.display.Image;
 	import starling.display.QuadBatch;
@@ -63,6 +65,7 @@ package com.sammyjoeosborne.spriter
 		
 		private var _animationData:AnimationData;
 		private var _spriterMC:SpriterMC;
+		private var _soundChannel:SoundChannel = new SoundChannel();
 		
 		protected var _id:uint;
 		private var _loop:Boolean = true;
@@ -75,6 +78,9 @@ package com.sammyjoeosborne.spriter
 		private var _playDirection:int = 1; //could be 1 for forward, -1 for backward
 		private var _playbackSpeed:Number = 1; //percentage for how fast this animation should play, 1 being the default 100%
 		private var _tempInfinitePreventer:int; //Fixed! Used for debugging...playback was goin cray cray sometimes. Keeping just in case.
+		
+		private var _callbacks:Vector.<Vector.<Command>>;
+		private var _sounds:Vector.<Vector.<Sound>>;
 		
 		
 		public function Animation($animationData:AnimationData, $spriterMC:SpriterMC)
@@ -171,16 +177,80 @@ package com.sammyjoeosborne.spriter
 			return mainKeys[_currentKeyIndex - _playDirection];
 		}
 		
+		/**
+		 * Sets the sound of the specified frame. You can supply more than 1 sound per frame as well.
+		 * @param	$frameID
+		 * @param	$sound
+		 */
 		public function setFrameSound($frameID:uint, $sound:Sound)
 		{
-			//TODO: add sounds to frames
+			if ($frameID < mainKeys.length)
+			{
+				if (!_sounds) 
+				{
+					_sounds = new Vector.<Vector.<Sound>>();
+					_sounds.length = mainKeys.length;
+				}
+				if (!_sounds[$frameID]) _sounds[$frameID] = new Vector.<Sound>()
+				if (_sounds[$frameID].indexOf($sound) == -1)
+				{
+					_sounds[$frameID].push($sound);
+				}
+			}
 		}
 		
-		public function getFrameSound($frameID:uint):Sound
+		/**
+		 * Returns a Vector(Sound) of all the sounds set to play on this frame
+		 * @param	$frameID
+		 * @return A Vector of Sounds set to play on the specified frame
+		 */
+		public function getFrameSounds($frameID:uint):Vector.<Sound>
 		{
-			//TODO: return sound once sounds are supported
-			return new Sound();
+			if ($frameID < mainKeys.length)
+			{
+				if (_sounds && _sounds[$frameID])
+				{
+					return _sounds[$frameID];
+				}
+				else return null;
+			}
 		}
+		
+		/**
+		 * If it existed, removes the specified sound from the specified frame so it will not longer play
+		 * @param	$frameID
+		 * @param	$sound
+		 */
+		public function removeFrameSound($frameID:uint, $sound:Sound):void
+		{
+			if ($frameID < mainKeys.length)
+			{
+				if (_sounds && _sounds[$frameID])
+				{
+					var $index:int = _sounds[$frameID].indexOf($sound)
+					if ($index != -1)
+					{
+						_sounds[$frameID].splice($index, 1);
+					}
+				}
+			}
+		}
+		
+		/**
+		 * Removes all sounds that were added to this frame so they will no longer play
+		 * @param	$frameID
+		 */
+		public function removeAllFrameSounds($frameID:uint):void
+		{
+			if ($frameID < mainKeys.length)
+			{
+				if (_sounds && _sounds[$frameID])
+				{
+					_sounds[$frameID].length = 0;
+				}
+			}
+		}
+		
 		
 		/**
 		 * Returns the number of milliseconds a frame lasts.
@@ -203,6 +273,67 @@ package com.sammyjoeosborne.spriter
 					return mainKeys[$frameID].time - mainKeys[$frameID - 1].time;
 				else
 					return mainKeys[$frameID].time;
+			}
+		}
+		
+		/**
+		 * addFrameCallback Allows you to register callback functions to be ran when an Animation hits a
+		 * a specified frame.
+		 * @param	$frameID - The ID of the frame to add the callback to
+		 * @param	$callback - The function to call
+		 * @param	$params - optional parameter to pass params into the callback if they are required
+		 */
+		public function addFrameCallback($frameID:uint, $callbackFunc:Function, $params:Array = null):void
+		{
+			if ($frameID < mainKeys.length)
+			{
+				var $callback:Command = new Command($callbackFunc, $params);
+				if (!_callbacks) {
+					_callbacks = new Vector.<Vector.<Command>>();
+					_callbacks.length = mainKeys.length;
+				}
+				if (!_callbacks[$frameID]) _callbacks[$frameID] = new Vector.<Command>();
+				if (!_callbacks[$frameID].length || !hasFrameCallback($frameID, $callbackFunc))
+				{
+					_callbacks[$frameID].push($callback);
+				}
+			}
+		}
+		
+		/**
+		 * removeFrameCallback - If it exists, removes the specified function from the specified frame's callbacks. Otherwise does nothing.
+		 * @param	$frameID
+		 * @param	$callbackFunc
+		 */
+		public function removeFrameCallback($frameID:uint, $callbackFunc:Function):void
+		{
+			if ($frameID < mainKeys.length)
+			{
+				if (_callbacks && _callbacks[$frameID])
+				{
+					for (var i:int = 0; i < _callbacks[$frameID].length; i++) 
+					{
+						if (_callbacks[$frameID][i].method == $callbackFunc)
+						{
+							_callbacks[$frameID].splice(i, 1);
+							break;
+						}
+					}
+				}
+			}
+		}
+		
+		public function hasFrameCallback($frameID:uint, $callbackFunc:Function):Boolean
+		{
+			if ($frameID < mainKeys.length)
+			{
+				if (!_callbacks || !_callbacks[$frameID]) return false;
+				for (var i:int = 0; i < _callbacks[$frameID].length; i++) 
+				{
+					if (_callbacks[$frameID][i].method == $callbackFunc) return true;
+				}
+				
+				return false;
 			}
 		}
 		
@@ -262,14 +393,21 @@ package com.sammyjoeosborne.spriter
 			if (_spriterMC.isReady)
 			{
 				_tempInfinitePreventer = 0; //for debugging...prevents infinite loop in updateCurrentFrame
-				updateCurrentFrame();
+				var $updated:Boolean = updateCurrentFrame();
+				var $currentMainKey:MainKey = getCurrentFrame();
+				if ($updated)
+				{
+					callFrameCallbacks(_currentKeyIndex);
+					playFrameSounds(_currentKeyIndex);
+				}
+				
 				
 				//Remove all children
 				//TODO: possibly optimize this to only remove/add what needs to be removed/added.
 				//Although, I think because of the render function in starling, removing/adding objects
 				//doesn't cause a lot of overhead. Not 100% sure about this though.
-				var $currentMainKey:MainKey = getCurrentFrame();
-					while (this.numChildren) removeChildAt(0);
+				
+				while (this.numChildren) removeChildAt(0);
 					
 				var $objRef:ObjectRef;
 				var $boneRef:BoneRef;
@@ -364,9 +502,44 @@ package com.sammyjoeosborne.spriter
 			}
 		}
 		
-		//TODO: rewrite this using a while loop...I think the recursion here is more expensive
-		//Also, make it return a boolean on whether the frame actually updated or not (for sound playback)
-		private function updateCurrentFrame():void
+		private function updateCurrentFrame():Boolean
+		{
+			var $currentIndex:uint = _currentKeyIndex;
+			var $nextFrame:MainKey;
+			while(true)
+			{
+				$nextFrame = getNextFrame(); //assign this so we're not processing the nextFrame each time
+				if (_currentTime == $nextFrame.time)
+				{
+					_currentKeyIndex = $nextFrame.id;
+					break;
+				}
+				
+				//if playing forwards
+				if (_playDirection >= 0)
+				{
+					//trace("foreward ct: " + _currentTime + "  cf: " + getCurrentFrame().time  + " nf: " + $nextFrame.time );
+					if (_currentTime >= getCurrentFrame().time && _currentTime < $nextFrame.time) 
+						break;
+				}
+				
+				//if playing backward
+				else
+				{
+					//trace("backward ct: " + _currentTime + "  cf: " + getCurrentFrame().time + " nf: " + $nextFrame.time);
+					if (_currentTime <= getCurrentFrame().time && _currentTime > $nextFrame.time)
+					{
+						break;
+					}
+				}
+				
+				_currentKeyIndex = $nextFrame.id;
+			}
+			
+			return ($currentIndex != _currentKeyIndex);
+		}
+		
+		/*private function updateCurrentFrame():void
 		{
 			var $nextFrame:MainKey = getNextFrame(); //assign this so we're not processing the nextFrame each time
 			if (_currentTime == $nextFrame.time)
@@ -395,7 +568,7 @@ package com.sammyjoeosborne.spriter
 			_tempInfinitePreventer++; //for debugging to prevent from going into infinite recursion
 			if (_tempInfinitePreventer > mainKeys.length + 1) throw new Error("crapped out.");
 			updateCurrentFrame();
-		}
+		}*/
 		
 		///returns true if the current time had to be brought back within the animation time bounds (0 to length)
 		private function normalizeCurrentTime():void
@@ -445,6 +618,29 @@ package com.sammyjoeosborne.spriter
 		}
 		
 		
+		private function callFrameCallbacks($frameID:uint):void 
+		{
+			if (_callbacks && _callbacks[$frameID])
+			{
+				for (var i:uint = 0; i < _callbacks[$frameID].length; i++)
+				{
+					_callbacks[$frameID][i].callMethod(this);
+				}
+			}
+		}
+		
+		private function playFrameSounds($frameID:uint):void
+		{
+			if (_sounds && _sounds[$frameID])
+			{
+				for (var i:int = 0; i < _sounds[$frameID].length; i++) 
+				{
+					_soundChannel = _sounds[$frameID][i].play();
+				}
+			}
+		}
+		
+		
 		/******************************************************
 		 * Functions to retrieve values from the AnimationData
 		 *****************************************************/
@@ -465,6 +661,8 @@ package com.sammyjoeosborne.spriter
 		internal function get originalyLooped():Boolean { return _animationData.loop; }
 		
 		public function get animationData():AnimationData { return _animationData; }		
+		
+		public function get soundChannel():SoundChannel { return _soundChannel; }
 	}
 
 }

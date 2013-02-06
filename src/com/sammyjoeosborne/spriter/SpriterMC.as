@@ -31,12 +31,14 @@
  *
  */
 
-package com.sammyjoeosborne.spriter 
+package com.sammyjoeosborne.spriter
 {
 	import com.sammyjoeosborne.spriter.models.Command;
 	import com.sammyjoeosborne.spriter.data.ScmlData;
 	import com.sammyjoeosborne.spriter.data.TexturePack;
+	import com.sammyjoeosborne.spriter.Animation;
 	import flash.media.Sound;
+	import flash.media.SoundChannel;
 	import starling.animation.IAnimatable;
 	import starling.display.DisplayObject;
 	import starling.display.Image;
@@ -397,29 +399,113 @@ package com.sammyjoeosborne.spriter
 		}
 		
 		/**
-		 * TODO: not yet implemented.
-		 * Method for manually setting Sounds on frames outside of what the SCML file 
-		 * specified.
+		 * addFrameCallback Allows you to register callback functions to be ran when an Animation hits a
+		 * a specified frame.
+		 * @param	$frameID - The ID of the frame to add the callback to
+		 * @param	$callback - The function to call
+		 * @param	$params - optional parameter to pass params into the callback if they are required
+		 */
+		public function addFrameCallback($frameID:uint, $callback:Function, $params:Array = null):void
+		{
+			if (_isReady && _currentAnimation)
+			{
+				_currentAnimation.addFrameCallback($frameID, $callback, $params);
+			}
+			else _commandQueue.push(new Command(addFrameCallback, [$frameID, $callback, $params]));
+		}
+		
+		/**
+		 * removeFrameCallback - If it exists, removes the specified function from the specified frame's callbacks. Otherwise does nothing.
+		 * @param	$frameID
+		 * @param	$callbackFunc
+		 */
+		public function removeFrameCallback($frameID:uint, $callback:Function):void
+		{
+			if (_isReady && _currentAnimation)
+			{
+				_currentAnimation.removeFrameCallback($frameID, $callback);
+			}
+			else _commandQueue.push(new Command(removeFrameCallback, [$frameID, $callback]));
+		}
+		
+		public function hasFrameCallback($frameID:uint, $callback:Function):Boolean
+		{
+			if (_isReady && _currentAnimation)
+			{
+				return _currentAnimation.hasFrameCallback($frameID, $callback);
+			}
+			else
+			{
+				trace("hasFrameCallback: Animation not yet ready, returning false.");
+				return false;
+			}
+		}
+		
+		/**
+		 * @return The soundChannel used by the current Animation, so it can be adjusted as needed
+		 */
+		public function get soundChannel():SoundChannel
+		{
+			if (_isReady && _currentAnimation)
+			{
+				return _currentAnimation.soundChannel;
+			}
+			else return null;
+		}
+		/**
+		 * Sets the sound of the specified frame. You can supply more than 1 sound per frame as well.
 		 * @param	$frameID
 		 * @param	$sound
 		 */
 		public function setFrameSound($frameID:uint, $sound:Sound)
 		{
-			//TODO: add sounds to frames
-			//currentAnimation.setFrameSound($frameID, $sound);
+			if (_isReady && _currentAnimation)
+			{
+				_currentAnimation.setFrameSound($frameID, $sound);
+			}
+			else _commandQueue.push(new Command(setFrameSound, [$frameID, $sound]));
 		}
 		
 		/**
-		 * TODO: not yet implemented. Will get any Sounds set to play on the specified frame
+		 * Returns a Vector(Sound) of all the sounds set to play on this frame
 		 * @param	$frameID
-		 * @return  A Vector of all Sounds set to play on the specified frame
+		 * @return A Vector of Sounds set to play on the specified frame
 		 */
-		/*public function getFrameSound($frameID:uint):Vector.<Sound>
+		public function getFrameSounds($frameID:uint):Vector.<Sound>
 		{
-			//TODO: return sound once sounds are supported
-			//return currentAnimation.getFrameSounds($frameID);
-			
-		}*/
+			if (_isReady && _currentAnimation)
+			{
+				return _currentAnimation.getFrameSounds($frameID);
+			}
+			else _commandQueue.push(new Command(getFrameSounds, [$frameID]));
+		}
+		
+		/**
+		 * If it existed, removes the specified sound from the specified frame so it will not longer play
+		 * @param	$frameID
+		 * @param	$sound
+		 */
+		public function removeFrameSound($frameID:uint, $sound:Sound):void
+		{
+			if (_isReady && _currentAnimation)
+			{
+				_currentAnimation.removeFrameSound($frameID, $sound);
+			}
+			else _commandQueue.push(new Command(removeFrameSound, [$frameID, $sound]));
+		}
+		
+		/**
+		 * Removes all sounds that were added to this frame so they will no longer play
+		 * @param	$frameID
+		 */
+		public function removeAllFrameSounds($frameID:uint):void
+		{
+			if (_isReady && _currentAnimation)
+			{
+				_currentAnimation.removeAllFrameSounds($frameID);
+			}
+			else _commandQueue.push(new Command(removeAllFrameSounds, [$frameID]));
+		}
 		 
 		/**
 		 * Returns the current Animation this SpriterMC is playing
