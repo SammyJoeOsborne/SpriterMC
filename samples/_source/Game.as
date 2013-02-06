@@ -44,7 +44,7 @@ package
 		
 		/**********************************************
 		 * LOADING FUNCTIONS
-		 * *******************************************/
+		 * *******************************************/		 
 		private function loadTexture($path:String):void
 		{
 			var $loader:Loader = new Loader();
@@ -98,14 +98,17 @@ package
 			_monster3.play();
 			
 			_hero1 = SpriterMCFactory.createSpriterMC("hero", "xml/hero.scml", _textureAtlas, spriterReadyHandler, true);
+			_hero1.name = "hero1";
 			_hero1.currentFrame = 4;
 			_hero1.play();
 			
 			_hero2 = SpriterMCFactory.generateInstance("hero", spriterReadyHandler);
+			_hero2.name = "hero2";
 			_hero2.playbackSpeed = 2;
 			_hero2.play();
 			
 			_hero3 = SpriterMCFactory.generateInstance("hero");
+			_hero3.name = "hero3";
 			_hero3.playbackSpeed = -.75;
 			_hero3.play();
 			

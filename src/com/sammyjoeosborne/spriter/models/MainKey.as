@@ -12,6 +12,7 @@ package com.sammyjoeosborne.spriter.models
 		protected var _time:uint; ///Time in milliseconds for this key to occur
 		protected var _objectRefs:Vector.<ObjectRef> = new Vector.<ObjectRef>();
 		protected var _boneRefs:Vector.<BoneRef> = new Vector.<BoneRef>();
+		protected var _callbacks:Vector.<Function>;
 		
 		public function MainKey($id:uint, $time:uint) 
 		{
@@ -36,8 +37,8 @@ package com.sammyjoeosborne.spriter.models
 		public function get boneRefs():Vector.<BoneRef> { return _boneRefs; }
 		public function set boneRefs(value:Vector.<BoneRef>):void { _boneRefs = value; }
 		
+		public function get callbacks():Vector.<Function> { return _callbacks; }
 		
-		//Must clone all internal elements as well, then reassign parentage
 		public function clone():MainKey
 		{
 			var $cMainKey:MainKey = new MainKey(_id, _time);
