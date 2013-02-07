@@ -81,9 +81,11 @@ package com.sammyjoeosborne.spriter
 		private var _animations:Vector.<Animation> = new Vector.<Animation>();
 		private var _currentAnimation:Animation;
 		private var _graphics:Vector.<Vector.<Image>> = new Vector.<Vector.<Image>>();
+		private var _showBones:Boolean = false;
 		
 		private var _commandQueue:Vector.<Command> = new Vector.<Command>(); ///Queues commands (play, pause, etc.) issued before the SpriterMC is ready and calls them once it is ready
 		private var _isReady:Boolean = false;
+		
 		
 		/**
 		 * You should never call this method. Only the SpriterMCFactory should be responsible for creating new SpriterMCs.
@@ -165,6 +167,11 @@ package com.sammyjoeosborne.spriter
 		 * @return Returns a Vector of Vector(Image), which is the current set of Images generated from the TexturePack
 		 */
 		public function get graphics():Vector.<Vector.<Image>>{ return _graphics; }
+		
+		public function get showBones():Boolean { return _showBones; }
+		public function set showBones(value:Boolean):void {
+			_showBones = value;
+		}
 		
 		/**********************************************************************
 		 * These just delegate the same calls to the current animation 

@@ -39,6 +39,7 @@ package com.sammyjoeosborne.spriter
 	import com.sammyjoeosborne.spriter.models.ObjectRef;
 	import com.sammyjoeosborne.spriter.models.Timeline;
 	import com.sammyjoeosborne.spriter.models.Transform;
+	import com.sammyjoeosborne.spriter.shapes.BonePoly;
 	import flash.media.Sound;
 	import flash.media.SoundChannel;
 	import starling.animation.IAnimatable;
@@ -406,11 +407,11 @@ package com.sammyjoeosborne.spriter
 				//TODO: possibly optimize this to only remove/add what needs to be removed/added.
 				//Although, I think because of the render function in starling, removing/adding objects
 				//doesn't cause a lot of overhead. Not 100% sure about this though.
-				
-				while (this.numChildren) removeChildAt(0);
+				while (this.numChildren) removeChildAt(0).dispose();
 					
 				var $objRef:ObjectRef;
 				var $boneRef:BoneRef;
+				var $boneContainer:Sprite;
 				var $key:Key;
 				var $nextKey:Key;
 				var $image:Image;
@@ -450,6 +451,19 @@ package com.sammyjoeosborne.spriter
 					}
 					
 					$boneTransformVec.push($transform);
+					
+					if (_spriterMC.showBones)
+					{
+						if (!$boneContainer) $boneContainer = new Sprite();
+						$bonePoly = new BonePoly();
+						$bonePoly.x 		= $transform.x;
+						$bonePoly.y 		= -$transform.y;
+						$bonePoly.scaleX	= $transform.scaleX;
+						$bonePoly.scaleY	= $transform.scaleY;
+						$bonePoly.rotation = -1*($transform.angle * RADIAN_IN_DEGREE);
+						
+						$boneContainer.addChild($bonePoly);
+					}
 				}
 				
 				//create objects
@@ -499,6 +513,8 @@ package com.sammyjoeosborne.spriter
 					
 					addChild($image)
 				}
+				
+				if (_spriterMC.showBones) addChild($boneContainer);
 			}
 		}
 		
