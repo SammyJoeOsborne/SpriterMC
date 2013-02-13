@@ -4,7 +4,7 @@ http://www.sammyjoeosborne.com/SpriterMC
 
 SpriterMC is a Starling implementation for importing skeletal (and non-skeletal) animations generated with Spriter (http://www.brashmonkey.com/spriter.htm), complete with a familiar API mimicking Starling MovieClip. Features include SpriterMC generation from an existing TextureAtlas or individual assets (a TextureAtlas is generated from assets dynamicall), bone support, ability to create multiple instances with low overhead, Framerate-independant and adjustable playback speed and playback direction, swap entire texture sets at runtime, and more. It currently supports all features of the Spriter file format (version a4.1), with future support planned for any subsequent changes to the SCML format.
 
-## Version .5
+## Version .85
 
 ### Features
 * Generates a SpriterMC (similar to a Starling MovieClip) from a provided SCML filepath (loading of the SCML file is handled for you)
