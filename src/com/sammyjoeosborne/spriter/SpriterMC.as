@@ -80,7 +80,7 @@ package com.sammyjoeosborne.spriter
 		
 		private var _animations:Vector.<Animation> = new Vector.<Animation>();
 		private var _currentAnimation:Animation;
-		private var _graphics:Vector.<Vector.<Image>> = new Vector.<Vector.<Image>>();
+		private var _graphics:Vector.<Vector.<Texture>> = new Vector.<Vector.<Texture>>();
 		private var _showBones:Boolean = false;
 		
 		private var _commandQueue:Vector.<Command> = new Vector.<Command>(); ///Queues commands (play, pause, etc.) issued before the SpriterMC is ready and calls them once it is ready
@@ -112,8 +112,8 @@ package com.sammyjoeosborne.spriter
 			else {
 				_scmlData.addEventListener(ScmlData.SCML_READY, sclmDataReadyHandler);
 			}
-			
-			if (_scmlData.isReady && _texturePack.isReady)
+
+			if (_scmlData.isReady && _texturePack && _texturePack.isReady)
 			{
 				setIsReady();
 			}
@@ -122,6 +122,7 @@ package com.sammyjoeosborne.spriter
 		private function setIsReady():void 
 		{
 			_isReady = true;
+			generateAnimationImages(); //goes through each Animation and generates the images required for display from the given Textures
 			setCurrentAnimation(_animations[0]);
 			while (_commandQueue.length)
 				_commandQueue.shift().callMethod(this);
@@ -149,6 +150,14 @@ package com.sammyjoeosborne.spriter
 			}
 		}
 		
+		private function generateAnimationImages():void
+		{
+			for (var i:int = 0, l:uint = _animations.length; i < l; i++) 
+			{
+				_animations[i].generateImages();
+			}
+		}
+		
 		private function createAnimations():void
 		{
 			var $length:uint = _scmlData.animationDatas.length;
@@ -164,9 +173,9 @@ package com.sammyjoeosborne.spriter
 		public function get isReady():Boolean { return _isReady; }
 		
 		/**
-		 * @return Returns a Vector of Vector(Image), which is the current set of Images generated from the TexturePack
+		 * @return Returns a Vector of Textures, which is the current set of Textures in the TexturePack
 		 */
-		public function get graphics():Vector.<Vector.<Image>>{ return _graphics; }
+		public function get textures():Vector.<Vector.<Texture>>{ return _texturePack.textureVec; }
 		
 		public function get showBones():Boolean { return _showBones; }
 		public function set showBones(value:Boolean):void {
@@ -379,10 +388,10 @@ package com.sammyjoeosborne.spriter
 				if ($disposeOld && _texturePack && $texturePack != _texturePack)
 				{
 					_texturePack.dispose();
-					_graphics = new Vector.<Vector.<Image>>();
+					_graphics = new Vector.<Vector.<Texture>>();
 				}
 				_texturePack = $texturePack;
-				_graphics = _texturePack.generateImageVector();
+				//_graphics = _texturePack.generateImageVector();
 			}
 			else
 			{

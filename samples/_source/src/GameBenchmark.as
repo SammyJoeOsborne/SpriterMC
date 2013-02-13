@@ -9,8 +9,6 @@ package
 	import flash.net.URLRequest;
 	import flash.utils.Timer;
 	import starling.animation.Juggler;
-	import starling.core.Starling;
-	import starling.core.StatsDisplay;
     import starling.display.Quad;
     import starling.display.Sprite;
 	import starling.events.EnterFrameEvent;
@@ -25,12 +23,6 @@ package
     public class GameBenchmark extends Sprite
     {
 		private var _juggler:Juggler;
-		private var _monster1:SpriterMC;
-		private var _monster2:SpriterMC;
-		private var _monster3:SpriterMC;
-		private var _hero1:SpriterMC;
-		private var _hero2:SpriterMC;
-		private var _hero3:SpriterMC;
 		
 		private var $frameNum:int = 0;
 		private var _characterTexture:Texture;
@@ -40,6 +32,11 @@ package
 		private var _spriterMC:SpriterMC;
 		private var _tf:TextField;
 		private var _quad:Quad;
+		private var _frame:uint;
+		
+		private var _frameRate:Number;
+		private var _frameCount:int = 0;
+		private var _totalTime:Number = 0;
 		
         public function GameBenchmark()
         {
@@ -109,22 +106,19 @@ package
 			_tf.y = stage.stageHeight - _tf.height;
 			addChild(_tf);
 			
+			//Using bones
+			_spriterMC = SpriterMCFactory.createSpriterMC("hero", "xml/hero.scml", _textureAtlas, spriterReadyHandler);
+			//Not using bones
+			//_spriterMC = SpriterMCFactory.createSpriterMC("hero", "xml/monster.scml", _textureAtlas, spriterReadyHandler);
 			
-			_spriterMC = SpriterMCFactory.createSpriterMC("hero", "xml/hero.scml", _textureAtlas);
+			_spriterMC.touchable = false;
 			_spriterMC.x = 50; 
-			_spriterMC.y = 400;
+			_spriterMC.y = 350;
 			_spriterMC.scaleX = _spriterMC.scaleY = .5;
 			_spriterMC.play();
 			_juggler.add(_spriterMC);
 			addChildAt(_spriterMC, 0);
-			
 			updateNumInstances();
-			
-			_timer = new Timer(175, 99);
-			_timer.addEventListener(TimerEvent.TIMER, duplicateCharacter);
-			_timer.start();
-			
-			addEventListener(Event.ENTER_FRAME, onEnterFrameHandler);
 		}
 		
 		private function updateNumInstances():void 
@@ -135,9 +129,10 @@ package
 			addChild(_tf);//keeping it on top*/
 		}
 		
-		private function duplicateCharacter($e:TimerEvent):void
+		private function duplicateCharacter():void
 		{
 			var $spriterMC2:SpriterMC = SpriterMCFactory.generateInstance("hero");
+			$spriterMC2.touchable = false;
 			$spriterMC2.scaleX = $spriterMC2.scaleY = .5;
 			$spriterMC2.x = randomNum(30, stage.stageWidth - 30);
 			$spriterMC2.y = randomNum(30, stage.stageHeight - 30);
@@ -150,14 +145,40 @@ package
 		
 		private function spriterReadyHandler($e:Event):void 
 		{
-			var $spriterMC:SpriterMC = $e.target as SpriterMC;
-			trace("SpriterMC ready: " + $spriterMC.spriterName);
-			//Now that SpriterMC is ready, do something if you so desire...
+			//var $spriterMC:SpriterMC = $e.target as SpriterMC;
+			/*_timer = new Timer(20, 429);
+			_timer.addEventListener(TimerEvent.TIMER, duplicateCharacter);
+			_timer.start();*/
+			updateNumInstances();
+			addEventListener(Event.ENTER_FRAME, onEnterFrameHandler);
 		}
 		
 		private function onEnterFrameHandler($e:EnterFrameEvent):void
-		{
+		{			
 			_juggler.advanceTime($e.passedTime);
+			
+			_totalTime += $e.passedTime;
+			if (++_frameCount % 60 == 0)
+			{
+				_frameRate = _frameCount / _totalTime;
+				_frameCount = _totalTime = 0;
+			}
+			
+			_frame++;
+			if (_frame == 3) {
+				_frame = 0;
+				if (_frameRate > 58)
+				{
+					duplicateCharacter();
+				}
+			}
+			
+			
+		}
+		
+		private function getFPS():void
+		{
+			
 		}
 		
 		public function setAnimationSpeed($value:Number):void

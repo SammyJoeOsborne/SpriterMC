@@ -34,7 +34,7 @@
         <file id="3" name="mon_head/head_0.png" width="0" height="0"/>
     </folder>
     <entity id="0" name="">
-        <animation id="0" name="Idle" length="2000" looping="false">
+        <animation id="0" name="Idle" length="2000" looping="true">
             <mainline>
                 <key id="0">
                     <object_ref id="0" timeline="0" key="0" z_index="0"/>
