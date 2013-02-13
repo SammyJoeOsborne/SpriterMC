@@ -14,6 +14,8 @@ package com.sammyjoeosborne.spriter.models
 		protected var _boneRefs:Vector.<BoneRef> = new Vector.<BoneRef>();
 		protected var _callbacks:Vector.<Function>;
 		
+		protected var _timelineIDsToRemove:Vector.<uint> = new Vector.<uint>();
+		
 		public function MainKey($id:uint, $time:uint) 
 		{
 			_id = 		$id;
@@ -39,11 +41,16 @@ package com.sammyjoeosborne.spriter.models
 		
 		public function get callbacks():Vector.<Function> { return _callbacks; }
 		
+		public function get timelineIDsToRemove():Vector.<uint> { return _timelineIDsToRemove; }
+		public function set timelineIDsToRemove(value:Vector.<uint>):void { _timelineIDsToRemove = value; }
+		
+		
 		public function clone():MainKey
 		{
 			var $cMainKey:MainKey = new MainKey(_id, _time);
 			$cMainKey.boneRefs = _boneRefs;
 			$cMainKey.objectRefs = _objectRefs;
+			$cMainKey.timelineIDsToRemove = _timelineIDsToRemove;
 			
 			return $cMainKey;
 		}

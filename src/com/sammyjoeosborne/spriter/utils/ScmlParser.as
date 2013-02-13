@@ -135,7 +135,7 @@ package com.sammyjoeosborne.spriter.utils
 						//if this is the first keyframe in the timeline, create it.
 						if (j == 0)
 						{
-							$key= new Key($id, $time, $spin);
+							$key = new Key($id, $time, $spin);
 						}
 						//if it's not the first keyframe in this timeline, assign this new 
 						//keyframe to the previous keyframe's next property
@@ -174,11 +174,27 @@ package com.sammyjoeosborne.spriter.utils
 						$key.scaleY = ($keyXML[$prop].hasOwnProperty("@scale_y")) ? Number($keyXML[$prop].@scale_y) : 1;
 						
 						$key.timeline = $timeline;
+						
 						//assign previous frame
 						$key.prev = (j != 0) ? $timeline.keys[j - 1] : null;
 						
-						$timeline.keys.push($key);
+						//determine if the x,y,scale,and angle have changed between the previos frame and this one,
+						//and also go back to the previous frame and determine if the values are different from this key's
+						if($key.prev)
+						{
+							$key.prevPropsDirty 		= !$key.arePropsEqual($key.prev);
+							$key.prev.nextPropsDirty 	= !$key.prev.arePropsEqual($key);
+							if(!$key.timeline.isBone)
+							{
+								$key.prevPivotDirty 		= !$key.pivot.equals($key.prev.pivot);
+								$key.prev.nextPivotDirty 	= !$key.prev.pivot.equals($key.pivot);
+								
+								$key.prevFileDirty			= ($key.file == $key.prev.file);
+								$key.prev.nextFileDirty		= ($key.prev.file == $key.file);
+							}
+						}
 						
+						$timeline.keys.push($key);
 					}
 				}
 				
@@ -224,7 +240,7 @@ package com.sammyjoeosborne.spriter.utils
 					
 					//add all bone refs
 					$boneRefList = $keyXML.bone_ref;
-					for (var j:int = 0; j < $boneRefList.length(); j++) 
+					for (j = 0; j < $boneRefList.length(); j++) 
 					{
 						$objXML = $boneRefList[j];
 						$id = parseInt($objXML.@id);
@@ -239,6 +255,16 @@ package com.sammyjoeosborne.spriter.utils
 						}
 						
 						$mainKey.boneRefs.push($boneRef);
+					}
+					
+					//we're about to add all obj refs, but first...
+					//add all timeslines that aren't bones and actually have keyframes as timelines to be removed, then we'll go through and splice out the ones that should stay
+					var $timelineLength:uint = $animationData.timelines.length;
+					for (var j:int = 0; j < $timelineLength; j++)
+					{
+						$timeline = $animationData.timelines[j];
+						if(!$timeline.isBone && $timeline.keys.length)
+							$mainKey.timelineIDsToRemove.push($timeline.id);
 					}
 					
 					//add all object refs
@@ -260,6 +286,10 @@ package com.sammyjoeosborne.spriter.utils
 						}
 						
 						$mainKey.objectRefs.push($objectRef);
+						
+						//now remove this objectRef's timeline from the timelines to be removed
+						var $index:int = $mainKey.timelineIDsToRemove.indexOf($objectRef.timeline.id);
+						if ($index != -1) $mainKey.timelineIDsToRemove.splice($index, 1);
 					}
 					
 					$animationData.mainKeys.push($mainKey);

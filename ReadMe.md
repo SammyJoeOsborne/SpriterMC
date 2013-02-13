@@ -22,7 +22,6 @@ SpriterMC is a Starling implementation for importing skeletal (and non-skeletal)
 * Add ability to switch fluidly between Animations (it will tween between them instead of instantly switching as it currently does)
 * Optimize and cleanup code
 * Add better Error checking
-* Add ability to draw bones as actual DisplayObjects (for debugging purposes)
 * Possibly add an adjustable rootPath variable to correct any relative pathing issues from the SWF when loading individual assets
 
 Usage

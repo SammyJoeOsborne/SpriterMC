@@ -1,5 +1,7 @@
 package com.sammyjoeosborne.spriter.models 
 {
+	import starling.display.Image;
+	import starling.textures.Texture;
 	/**
 	 * ...
 	 * @author Sammy Joe Osborne
@@ -32,8 +34,6 @@ package com.sammyjoeosborne.spriter.models
 		
 		public function get isBone():Boolean { return _isBone; }
 		public function set isBone(value:Boolean):void { _isBone = value; }
-		
-		
 		
 	}
 

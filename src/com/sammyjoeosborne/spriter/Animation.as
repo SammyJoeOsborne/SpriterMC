@@ -39,7 +39,7 @@ package com.sammyjoeosborne.spriter
 	import com.sammyjoeosborne.spriter.models.ObjectRef;
 	import com.sammyjoeosborne.spriter.models.Timeline;
 	import com.sammyjoeosborne.spriter.models.Transform;
-	import com.sammyjoeosborne.spriter.shapes.BonePoly;
+	import com.sammyjoeosborne.spriter.utils.BoneTexture;
 	import flash.media.Sound;
 	import flash.media.SoundChannel;
 	import starling.animation.IAnimatable;
@@ -47,6 +47,7 @@ package com.sammyjoeosborne.spriter
 	import starling.display.QuadBatch;
 	import starling.display.Sprite;
 	import starling.events.Event;
+	import starling.textures.Texture;
 	
 	/** <p>Used by SpriterMC (you shouldn't ever use it, really), Animation is the meat of a SpriterMC. You should never really need to interact with an Animation
 	 * directly. A SpriterMC can contain many Animations, such as "walk", "run", "jump", etc. These are created
@@ -78,11 +79,13 @@ package com.sammyjoeosborne.spriter
 		private var _isPlaying:Boolean = false;
 		private var _playDirection:int = 1; //could be 1 for forward, -1 for backward
 		private var _playbackSpeed:Number = 1; //percentage for how fast this animation should play, 1 being the default 100%
-		private var _tempInfinitePreventer:int; //Fixed! Used for debugging...playback was goin cray cray sometimes. Keeping just in case.
 		
 		private var _callbacks:Vector.<Vector.<Command>>;
 		private var _sounds:Vector.<Vector.<Sound>>;
 		
+		private var _timelineImages:Vector.<Image> = new Vector.<Image>();
+		private var _boneImages:Vector.<Image>;
+		static public var BONE_TEXTURE:Texture; //we only want one copy of this Texture. It's not created if not needed
 		
 		public function Animation($animationData:AnimationData, $spriterMC:SpriterMC)
 		{
@@ -92,6 +95,8 @@ package com.sammyjoeosborne.spriter
 			this.name = _animationData.name;
 			init();
 		}
+		
+		
 		
 		/**********************
 		 * Public functions
@@ -126,7 +131,7 @@ package com.sammyjoeosborne.spriter
 			_currentTime = 0;
 		}
 		 
-		 public function advanceTime($time:Number):void 
+		public function advanceTime($time:Number):void 
 		{
 			if (!_isPlaying || _playbackSpeed == 0 || !_spriterMC.isReady) return;
 			
@@ -143,7 +148,7 @@ package com.sammyjoeosborne.spriter
 				//if we're playing backward and current time is somehow less than 0, don't update. Just return.
 				else if (_playDirection < 0 && (_currentTime < 0)) return;
 				
-				updateVisuals()
+				updateVisuals();
 			}
 			//if the animation hasn't been stopped by this point, carry on
 			if(_loop)
@@ -162,10 +167,10 @@ package com.sammyjoeosborne.spriter
 			//if playing backward
 			else
 			{
-				if (_currentKeyIndex == 0) return mainKeys[mainKeys.length - 1];
+				if (_currentKeyIndex == 0) return mainKeys[int(mainKeys.length - 1)];
 			}
 			
-			return mainKeys[_currentKeyIndex + _playDirection];
+			return mainKeys[int(_currentKeyIndex + _playDirection)];
 		}
 		
 		public function getCurrentFrame():MainKey
@@ -175,7 +180,18 @@ package com.sammyjoeosborne.spriter
 		
 		public function getPreviousFrame():MainKey
 		{
-			return mainKeys[_currentKeyIndex - _playDirection];
+			//if playing forward
+			if (_playDirection >= 0)
+			{
+				if (_currentKeyIndex == 0) return mainKeys[int(mainKeys.length - 1)];
+			}
+			//if playing backward
+			else
+			{
+				if (_currentKeyIndex == mainKeys.length - 1) return mainKeys[0];
+			}
+			
+			return mainKeys[int(_currentKeyIndex - _playDirection)];
 		}
 		
 		/**
@@ -264,14 +280,14 @@ package com.sammyjoeosborne.spriter
 			if (_playDirection >= 0)
 			{
 				if ($frameID < mainKeys.length - 1)
-					return mainKeys[$frameID + 1].time - mainKeys[$frameID].time;
+					return mainKeys[int($frameID + 1)].time - mainKeys[$frameID].time;
 				else
 					return totalTime - mainKeys[$frameID].time;
 			}
 			else
 			{
 				if ($frameID > 0)
-					return mainKeys[$frameID].time - mainKeys[$frameID - 1].time;
+					return mainKeys[$frameID].time - mainKeys[int($frameID - 1)].time;
 				else
 					return mainKeys[$frameID].time;
 			}
@@ -338,6 +354,26 @@ package com.sammyjoeosborne.spriter
 			}
 		}
 		
+		internal function generateImages():void
+		{
+			var $mainKeysLength:uint = _animationData.mainKeys.length;
+			var $tl:Timeline;
+			var $key:Key;
+			_timelineImages.length = 0;
+			for (var i:uint = 0; i < _animationData.timelines.length; i++)
+			{
+				$tl = _animationData.timelines[i];
+				if ($tl.isBone || $tl.keys.length == 0)
+				{
+					_timelineImages.push(null)
+				}
+				else {
+					$key = $tl.keys[0];
+					_timelineImages.push(new Image(_spriterMC.textures[$key.folder][$key.file]));
+				}
+			}
+		}
+		
 		/****************************
 		 * Public Getters and Setters
 		 ***************************/
@@ -388,60 +424,74 @@ package com.sammyjoeosborne.spriter
 		/******************************
 		* Private (internal) functions
 		*******************************/
-		
+		private var $updated
+		private var $currentMainKey:MainKey;
+		private var $objRef:ObjectRef;
+		private var $timeline:Timeline;
+		private var $boneRef:BoneRef;
+		private var $boneContainer:Sprite;
+		private var $key:Key;
+		private var $nextKey:Key;
+		private var $image:Image;
+		private var $boneTransformVec:Vector.<Transform> = new Vector.<Transform>();
+		private var $spin:int;
+		private var $transform:Transform;
+		private var $tweenFactor:Number;
+		private var $propsAreDirty:Boolean;
+		private var $pivotIsDirty:Boolean;
+		private var $fileIsDirty:Boolean;
+		private var $playingForward:Boolean;
+		private var $refLength:uint;
+		private var $toRemoveLength:uint;
+		private var $boneImage:Image;
 		internal function updateVisuals():void 
 		{
 			if (_spriterMC.isReady)
 			{
-				_tempInfinitePreventer = 0; //for debugging...prevents infinite loop in updateCurrentFrame
-				var $updated:Boolean = updateCurrentFrame();
-				var $currentMainKey:MainKey = getCurrentFrame();
+				$updated = updateCurrentFrame(); //did the current frame change or are we just further along in the same frame
+				$currentMainKey= getCurrentFrame();
 				if ($updated)
 				{
 					callFrameCallbacks(_currentKeyIndex);
 					playFrameSounds(_currentKeyIndex);
 				}
 				
+				$playingForward = (_playDirection > 0);
 				
-				//Remove all children
-				//TODO: possibly optimize this to only remove/add what needs to be removed/added.
-				//Although, I think because of the render function in starling, removing/adding objects
-				//doesn't cause a lot of overhead. Not 100% sure about this though.
-				while (this.numChildren) removeChildAt(0).dispose();
+				//Remove all children that don't belong
+				$toRemoveLength = $currentMainKey.timelineIDsToRemove.length;
+				var $timelineIDsToRemove = $currentMainKey.timelineIDsToRemove;
+				for (var j:int = 0; j < $toRemoveLength; j++) 
+				{
+					$image = _timelineImages[$timelineIDsToRemove[j]];
+					if ($image.parent == this) removeChild($image);
+				}
+				
+				//if drawing bones, empty the bone container indiscriminately (being lazy, but bones are really just for debugging anyway)
+				if(_spriterMC.showBones && $boneContainer) $boneContainer.removeChildren();
 					
-				var $objRef:ObjectRef;
-				var $boneRef:BoneRef;
-				var $boneContainer:Sprite;
-				var $key:Key;
-				var $nextKey:Key;
-				var $image:Image;
-				var $boneTransformVec:Vector.<Transform> = new Vector.<Transform>();
-				var $spin:int;
-				var $transform:Transform;
-				var $parentTransform:Transform;
-				var $tweenFactor:Number;
-				
-				//based on play direction, figure out if the previous or next frame is the actual next frame
-				var $nextOrPrev:String = (_playDirection >= 0) ? "next" : "prev";
 				//create bones
-				for (var i:int = 0; i < $currentMainKey.boneRefs.length; i++) 
+				$refLength = $currentMainKey.boneRefs.length;
+				if ($refLength) $boneTransformVec.length = 0;
+				for (var i:int = 0; i < $refLength; i++) 
 				{
 					$boneRef = $currentMainKey.boneRefs[i];
 					$key = $boneRef.key;
-					$transform = new Transform($key.x, $key.y, $key.angle, $key.scaleX, $key.scaleY);
+					$transform = $key.modTransform.copyValues($key.originalTransform);
 					
 					//perform lerping
-					$nextKey = $key[$nextOrPrev];
-					if ($nextKey)
+					//based on play direction, figure out which key is the "next" key
+					$nextKey = ($playingForward) ? $key.next : $key.prev;
+					$propsAreDirty = ($playingForward) ? $key.nextPropsDirty : $key.prevPropsDirty;
+					if ($nextKey && $propsAreDirty)
 					{
 						$tweenFactor = (_currentTime - $key.time) / ($nextKey.time - $key.time);
-						$parentTransform = new Transform($nextKey.x, $nextKey.y, $nextKey.angle, $nextKey.scaleX, $nextKey.scaleY);
 						
 						//spin should be derived from the key you're coming from, not the key you're going to
 						//If _playDirection is backwards, we must derive the spin from the
 						//current key's previous key and reverse it. In this case, the previous key IS $nextKey
-						$spin = (_playDirection >= 0) ? $key.spin : $nextKey.spin * -1;
-						$transform.transformLerp($parentTransform, $tweenFactor, $spin);
+						$spin = ($playingForward) ? $key.spin : $nextKey.spin * -1;
+						$transform.transformLerp($nextKey.originalTransform, $tweenFactor, $spin); //lerp with parent transform (nextkey.originalTransform)
 					}
 					
 					//apply parent transformation
@@ -452,39 +502,50 @@ package com.sammyjoeosborne.spriter
 					
 					$boneTransformVec.push($transform);
 					
+					//======================== Bone Drawing =======================
 					if (_spriterMC.showBones)
 					{
-						if (!$boneContainer) $boneContainer = new Sprite();
-						$bonePoly = new BonePoly();
-						$bonePoly.x 		= $transform.x;
-						$bonePoly.y 		= -$transform.y;
-						$bonePoly.scaleX	= $transform.scaleX;
-						$bonePoly.scaleY	= $transform.scaleY;
-						$bonePoly.rotation = -1*($transform.angle * RADIAN_IN_DEGREE);
+						if (!_boneImages || _boneImages.length == 0)
+						{
+							generateBoneImages();
+						}
 						
-						$boneContainer.addChild($bonePoly);
+						if (!$boneContainer) $boneContainer = new Sprite();
+						$boneImage 			= _boneImages[i];
+						$boneImage.x 		= $transform.x;
+						$boneImage.y 		= -$transform.y;
+						$boneImage.scaleX	= $transform.scaleX;
+						$boneImage.scaleY	= $transform.scaleY;
+						$boneImage.rotation = -1 * ($transform.angle * RADIAN_IN_DEGREE);
+						$boneContainer.addChild($boneImage);
 					}
+					else if($boneContainer)
+					{
+						if ($boneContainer.parent == this) $boneContainer.removeFromParent(true);
+					}
+					
+					//===================== End Bone Drawing ======================
 				}
 				
 				//create objects
-				for (i = 0; i < $currentMainKey.objectRefs.length; i++) 
+				$refLength = $currentMainKey.objectRefs.length;
+				for (i = 0; i < $refLength; i++) 
 				{	
 					$objRef = $currentMainKey.objectRefs[i];
-					$key = $currentMainKey.objectRefs[i].key;
-					$transform = new Transform($key.x, $key.y, $key.angle, $key.scaleX, $key.scaleY);
+					$key = $objRef.key;
+					$transform = $key.modTransform.copyValues($key.originalTransform);
 					
 					//perform lerping
-					$nextKey = $key[$nextOrPrev];
-					if ($nextKey)
+					$nextKey = ($playingForward) ? $key.next : $key.prev;
+					$propsAreDirty = ($playingForward) ? $key.nextPropsDirty : $key.prevPropsDirty;
+					if ($nextKey && $propsAreDirty)
 					{
 						$tweenFactor = (_currentTime - $key.time) / ($nextKey.time - $key.time);
-						$parentTransform = new Transform($nextKey.x, $nextKey.y, $nextKey.angle, $nextKey.scaleX, $nextKey.scaleY);
 						//spin should be derived from the key you're coming from, not the key you're going to
 						//If _playDirection is backwards, we must derive the spin from the
 						//current key's previous key and reverse it. In this case, the previous key IS $nextKey
-						$spin = (_playDirection >= 0) ? $key.spin : $nextKey.spin * -1;
-						$transform.transformLerp($parentTransform, $tweenFactor, $spin);
-						
+						$spin = ($playingForward) ? $key.spin : $nextKey.spin * -1;
+						$transform.transformLerp($nextKey.originalTransform, $tweenFactor, $spin);
 					}
 					
 					if ($objRef.parent)
@@ -492,26 +553,53 @@ package com.sammyjoeosborne.spriter
 						$transform.applyParentTransform($boneTransformVec[$objRef.parentID]);
 					}
 					
-					//Get the actual graphic and apply the final transform to it
-					$image = _spriterMC.graphics[$key.folder][$key.file];
-					//must reset rotation and scale so we can accurately set the pivot point
-					//since the image was scaled/rotated in the previous frame (which throws off its width/height if we don't reset it)
-					$image.rotation = 0; 
-					$image.scaleX = $image.scaleY = 1;
-					
-					//the pivots use UV coords, so this is a little tricky. 
-					//UV coords are 0,0 at bottom left, 1,1 at top right so we must do
-					//the math to translate into starling coordinate space
-					$image.pivotX = $key.pivot.x * $image.width;
-					$image.pivotY = ((1 - $key.pivot.y) * $image.height);
+					//**********Adding stuff to stage************************
+					var $timelineID = $key.timeline.id;
+					$image = _timelineImages[$timelineID];
+					if ($image.parent != this)
+					{
+						addChild($image);
+						//must reset rotation and scale so we can accurately set the pivot point
+						//since the image was scaled/rotated in the previous frame (which throws off its width/height if we don't reset it)
+						$image.rotation = 0; 
+						$image.scaleX = $image.scaleY = 1;
+						$image.pivotX = $key.pivot.x * $image.width;
+						$image.pivotY = ((1 - $key.pivot.y) * $image.height);						
+					}
+					//it's already on the stage so don't add it, but update dirty props
+					else
+					{
+						$fileIsDirty = ($playingForward) ? $key.nextFileDirty : $key.prevFileDirty;
+						if ($fileIsDirty)
+						{
+							//TODO: make this only update the texture so we can have more than one of the same texture
+							_timelineImages[$timelineID].texture = _spriterMC.textures[$key.folder][$key.file];
+						}
+						
+						//must reset rotation and scale so we can accurately set the pivot point
+						//since the image was scaled/rotated in the previous frame (which throws off its width/height if we don't reset it)
+						$pivotIsDirty = ($playingForward) ? $key.nextPivotDirty : $key.prevPivotDirty;
+						if ($pivotIsDirty)
+						{
+							$image.rotation = 0; 
+							$image.scaleX = $image.scaleY = 1;
+							
+							//the pivots use UV coords, so this is a little tricky. 
+							//UV coords are 0,0 at bottom left, 1,1 at top right so we must do
+							//the math to translate into starling coordinate space
+							$image.pivotX = $key.pivot.x * $image.width;
+							$image.pivotY = ((1 - $key.pivot.y) * $image.height);
+						}
+						
+						//TODO: swap depths here if it's needed
+						
+					}
 					
 					$image.scaleX = $transform.scaleX;
 					$image.scaleY = $transform.scaleY;
 					$image.x = $transform.x;
 					$image.y = -$transform.y;
 					$image.rotation = -1*($transform.angle * RADIAN_IN_DEGREE);	
-					
-					addChild($image)
 				}
 				
 				if (_spriterMC.showBones) addChild($boneContainer);
@@ -554,37 +642,6 @@ package com.sammyjoeosborne.spriter
 			
 			return ($currentIndex != _currentKeyIndex);
 		}
-		
-		/*private function updateCurrentFrame():void
-		{
-			var $nextFrame:MainKey = getNextFrame(); //assign this so we're not processing the nextFrame each time
-			if (_currentTime == $nextFrame.time)
-			{
-				_currentKeyIndex = $nextFrame.id;
-				return;
-			}
-			
-			//if playing forwards
-			if (_playDirection >= 0)
-			{
-				//trace("foreward ct: " + _currentTime + "  cf: " + getCurrentFrame().time  + " nf: " + $nextFrame.time );
-				if (_currentTime >= getCurrentFrame().time && _currentTime < $nextFrame.time) return;
-			}
-			//if playing backward
-			else
-			{
-				//trace("backward ct: " + _currentTime + "  cf: " + getCurrentFrame().time + " nf: " + $nextFrame.time);
-				if (_currentTime <= getCurrentFrame().time && _currentTime > $nextFrame.time)
-				{
-					return;
-				}
-			}
-			
-			_currentKeyIndex = $nextFrame.id;
-			_tempInfinitePreventer++; //for debugging to prevent from going into infinite recursion
-			if (_tempInfinitePreventer > mainKeys.length + 1) throw new Error("crapped out.");
-			updateCurrentFrame();
-		}*/
 		
 		///returns true if the current time had to be brought back within the animation time bounds (0 to length)
 		private function normalizeCurrentTime():void
@@ -653,6 +710,34 @@ package com.sammyjoeosborne.spriter
 				{
 					_soundChannel = _sounds[$frameID][i].play();
 				}
+			}
+		}
+		
+		//used to generate images used when we want to display bones
+		private function generateBoneImages():void
+		{
+			//create this texture only once
+			if (!Animation.BONE_TEXTURE)
+			{
+				Animation.BONE_TEXTURE = BoneTexture.generateBoneTexture();
+			}
+			
+			_boneImages = new Vector.<Image>();
+			//get the highest number of bones that ever exist during a frame
+			var $highestBoneCount:uint = 0;
+			var $boneLength:uint;
+			for (var i:uint = 0, l:uint = _animationData.mainKeys.length; i < l; i++)
+			{
+					$boneLength = _animationData.mainKeys[i].boneRefs.length;
+					if ($boneLength > $highestBoneCount) $highestBoneCount = $boneLength;
+			}
+
+			var $image:Image;
+			for (i = 0; i < $highestBoneCount; i++)
+			{
+				$image = new Image(Animation.BONE_TEXTURE)
+				$image.pivotY = $image.height / 2; //setting pivot here so we don't have to during updateVisuals
+				_boneImages.push($image);
 			}
 		}
 		

@@ -69,7 +69,7 @@ package com.sammyjoeosborne.spriter.data
 		private var _folders:Vector.<Folder> = new Vector.<Folder>();
 		private var _isReady:Boolean = false;
 		private var _loadedAssets:Vector.<MovieClip>;
-		private var _imageVec:Vector.<Vector.<Image>>
+		private var _textureVec:Vector.<Vector.<Texture>>
 		
 		public function TexturePack($name:String, $textureAtlas:TextureAtlas) 
 		{
@@ -99,18 +99,18 @@ package com.sammyjoeosborne.spriter.data
 			return _folders[$folderID].files[$fileID].texture;
 		}
 		
-		public function generateImageVector():Vector.<Vector.<Image>>
+		public function generateImageVector():Vector.<Vector.<Texture>>
 		{
-			var $imageVec:Vector.<Vector.<Image>> = new Vector.<Vector.<Image>>();
+			var $imageVec:Vector.<Vector.<Texture>> = new Vector.<Vector.<Texture>>();
 			var $folderLength:uint = _folders.length;
 			var $filesLength:uint;
 			for (var i:int = 0; i < $folderLength; i++) 
 			{
-				$imageVec.push(new Vector.<Image>());
+				$imageVec.push(new Vector.<Texture>());
 				$filesLength = _folders[i].files.length;
 				for (var j:int = 0; j < $filesLength; j++)
 				{
-					$imageVec[i].push(new Image(_folders[i].files[j].texture));
+					$imageVec[i].push(_folders[i].files[j].texture);
 				}
 			}
 			
@@ -168,7 +168,6 @@ package com.sammyjoeosborne.spriter.data
 			_loadedAssets = new Vector.<MovieClip>();
 			if (!_isReady)
 			{
-				//I'm not a fan of BulkLoader...this is temporary until I can write a similar load manager to the proprietary one we use at my work. It's the shizzle.
 				var $simpleLoader:SimpleAssetLoader = new SimpleAssetLoader();
 				var $folder:Folder;
 				var $foldersLength:uint = _folders.length;
@@ -240,7 +239,7 @@ package com.sammyjoeosborne.spriter.data
 		{
 			trace("TexturePack " + _name + " loaded all textures successfully.");
 			_isReady = true;
-			_imageVec = generateImageVector();
+			_textureVec = generateImageVector();
 			dispatchEventWith(TEXTURE_PACK_READY);
 		}
 		
@@ -249,7 +248,7 @@ package com.sammyjoeosborne.spriter.data
 		
 		public function get isReady():Boolean { return _isReady; }
 		
-		public function get imageVec():Vector.<Vector.<Image>> { return _imageVec; }
+		public function get textureVec():Vector.<Vector.<Texture>> { return _textureVec; }
 		
 		public function dispose():void
 		{
@@ -260,7 +259,7 @@ package com.sammyjoeosborne.spriter.data
 			}
 			
 			_folders.length = 0; _folders = null;
-			_imageVec.length = 0; _imageVec = null;
+			_textureVec.length = 0; _textureVec = null;
 			_loadedAssets.length = 0; _loadedAssets = null;
 		}
 		
