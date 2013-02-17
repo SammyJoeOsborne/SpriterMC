@@ -35,7 +35,7 @@ package com.sammyjoeosborne.spriter.load
 		
 		public function addItem($url:String, $data:Object = null):void
 		{
-			_queue.push(new SimpleLoadItem(_totalItems, $url, $data));
+			_queue.push(new SimpleLoadItem(_totalItems.toString(), $url, $data));
 			_totalItems++;
 		}
 		

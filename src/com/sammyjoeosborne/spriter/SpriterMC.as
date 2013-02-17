@@ -493,7 +493,8 @@ package com.sammyjoeosborne.spriter
 			{
 				return _currentAnimation.getFrameSounds($frameID);
 			}
-			else _commandQueue.push(new Command(getFrameSounds, [$frameID]));
+			else throw new Error("Cannot determine sounds yet. SpriterMC is not ready.")
+			return null;
 		}
 		
 		/**
@@ -538,6 +539,34 @@ package com.sammyjoeosborne.spriter
 		
 		public function get texturePack():TexturePack { return _texturePack; }
 		
+		//TODO: modify this function to allow for smooth transitioning between Animations
+		/**
+		 * Allows you to switch between the various Animations in this SpriterMC
+		 * @param	$name - the name of the Animation to switch to, such as "Run", "walk", "jump", etc.
+		 * @param	$playImmediately - whether the Animation should play now or just sit paused on the specified frame
+		 * @throws  An Error if an animation by that name is not found
+		 */
+		/*public function setAnimationByName($name:String, $frame:uint = 0, $transitionTime:uint = 1, $playImmediately:Boolean = true):void
+		{
+			if (_isReady && _currentAnimation)
+			{
+				var $animation:Animation;
+				for (var i:int = 0; i < _animations.length; i++) 
+				{
+					if (_animations[i].name == $name)
+					{
+						setCurrentAnimation(_animations[i], $playImmediately);
+						return;
+					}
+				}
+				
+				throw new Error("Animation \"" + $name + "\" not found.");
+			}
+			else {
+				_commandQueue.push(new Command(setAnimationByName, [$name, $frame, $transitionTime, $playImmediately]));
+			}
+		}*/
+		
 		/**
 		 * Allows you to switch between the various Animations in this SpriterMC
 		 * @param	$name - the name of the Animation to switch to, such as "Run", "walk", "jump", etc.
@@ -565,29 +594,21 @@ package com.sammyjoeosborne.spriter
 			}
 		}
 		
-		/**
-		 * Same as setAnimationByName, except using an Animation's ID number. This is a zero based number, appearing in order in the SCML file
-		 * @param	$id - The id of the animation to switch to
-		 * @param	$playImmediately
-		 * @throws  An Error if an animation by that id is not found
-		 */
-		public function setAnimationByID($id:uint, $playImmediately:Boolean = false)
+		/*private function setCurrentAnimation($value:Animation, $frame:uint = 0, $transitionTime:uint = 1, $playImmediately:Boolean = false):void 
 		{
-			if(_isReady && _currentAnimation)
+			if (_currentAnimation != $value)
 			{
-				if ($id > 0 && $id < _animations.length)
+				if (this.contains(_currentAnimation))
 				{
-					setCurrentAnimation(_animations[$id], $playImmediately);
-					return;
+					removeChild(_currentAnimation);
 				}
 				
-				throw new Error("Animation with id " + $id + " does not exist. Id out of range.");
-				}
-			else {
-				_commandQueue.push(new Command(setAnimationByID, [$id, $playImmediately]));
+				_currentAnimation = $value;
+				addChild(_currentAnimation);
+				_currentAnimation.updateVisuals();
+				if ($playImmediately) play();
 			}
-		}
-		
+		}*/
 		private function setCurrentAnimation($value:Animation, $playImmediately:Boolean = false):void 
 		{
 			if (_currentAnimation != $value)

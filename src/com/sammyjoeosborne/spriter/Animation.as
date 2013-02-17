@@ -77,6 +77,7 @@ package com.sammyjoeosborne.spriter
 		private var _currentKeyIndex:int = 0;
 		private var _currentTime:int = 0;
 		private var _isPlaying:Boolean = false;
+		private var _isTransitioning:Boolean = false;
 		private var _playDirection:int = 1; //could be 1 for forward, -1 for backward
 		private var _playbackSpeed:Number = 1; //percentage for how fast this animation should play, 1 being the default 100%
 		
@@ -229,8 +230,9 @@ package com.sammyjoeosborne.spriter
 				{
 					return _sounds[$frameID];
 				}
-				else return null;
 			}
+			
+			return null;
 		}
 		
 		/**
@@ -348,10 +350,10 @@ package com.sammyjoeosborne.spriter
 				for (var i:int = 0; i < _callbacks[$frameID].length; i++) 
 				{
 					if (_callbacks[$frameID][i].method == $callbackFunc) return true;
-				}
-				
-				return false;
+				}	
 			}
+			
+			return false;
 		}
 		
 		internal function generateImages():void
@@ -448,161 +450,166 @@ package com.sammyjoeosborne.spriter
 		{
 			if (_spriterMC.isReady)
 			{
-				$updated = updateCurrentFrame(); //did the current frame change or are we just further along in the same frame
-				$currentMainKey= getCurrentFrame();
-				if ($updated)
+				if (!_isTransitioning)
 				{
-					callFrameCallbacks(_currentKeyIndex);
-					playFrameSounds(_currentKeyIndex);
-				}
-				
-				$playingForward = (_playDirection > 0);
-				
-				//Remove all children that don't belong
-				$toRemoveLength = $currentMainKey.timelineIDsToRemove.length;
-				var $timelineIDsToRemove = $currentMainKey.timelineIDsToRemove;
-				for (var j:int = 0; j < $toRemoveLength; j++) 
-				{
-					$image = _timelineImages[$timelineIDsToRemove[j]];
-					if ($image.parent == this) removeChild($image);
-				}
-				
-				//if drawing bones, empty the bone container indiscriminately (being lazy, but bones are really just for debugging anyway)
-				if(_spriterMC.showBones && $boneContainer) $boneContainer.removeChildren();
-					
-				//create bones
-				$refLength = $currentMainKey.boneRefs.length;
-				if ($refLength) $boneTransformVec.length = 0;
-				for (var i:int = 0; i < $refLength; i++) 
-				{
-					$boneRef = $currentMainKey.boneRefs[i];
-					$key = $boneRef.key;
-					$transform = $key.modTransform.copyValues($key.originalTransform);
-					
-					//perform lerping
-					//based on play direction, figure out which key is the "next" key
-					$nextKey = ($playingForward) ? $key.next : $key.prev;
-					$propsAreDirty = ($playingForward) ? $key.nextPropsDirty : $key.prevPropsDirty;
-					if ($nextKey && $propsAreDirty)
+					$updated = updateCurrentFrame(); //did the current frame change or are we just further along in the same frame
+					$currentMainKey= getCurrentFrame();
+					if ($updated)
 					{
-						$tweenFactor = (_currentTime - $key.time) / ($nextKey.time - $key.time);
+						callFrameCallbacks(_currentKeyIndex);
+						playFrameSounds(_currentKeyIndex);
+					}
+					
+					$playingForward = (_playDirection > 0);
+					
+					//Remove all children that don't belong
+					$toRemoveLength = $currentMainKey.timelineIDsToRemove.length;
+					var $timelineIDsToRemove = $currentMainKey.timelineIDsToRemove;
+					for (var j:int = 0; j < $toRemoveLength; j++) 
+					{
+						$image = _timelineImages[$timelineIDsToRemove[j]];
+						if ($image.parent == this) removeChild($image);
+					}
+					
+					//if drawing bones, empty the bone container indiscriminately (being lazy, but bones are really just for debugging anyway)
+					if(_spriterMC.showBones && $boneContainer) $boneContainer.removeChildren();
 						
-						//spin should be derived from the key you're coming from, not the key you're going to
-						//If _playDirection is backwards, we must derive the spin from the
-						//current key's previous key and reverse it. In this case, the previous key IS $nextKey
-						$spin = ($playingForward) ? $key.spin : $nextKey.spin * -1;
-						$transform.transformLerp($nextKey.originalTransform, $tweenFactor, $spin); //lerp with parent transform (nextkey.originalTransform)
-					}
-					
-					//apply parent transformation
-					if ($boneRef.parent)
+					//create bones
+					$refLength = $currentMainKey.boneRefs.length;
+					if ($refLength) $boneTransformVec.length = 0;
+					for (var i:int = 0; i < $refLength; i++) 
 					{
-						$transform.applyParentTransform($boneTransformVec[$boneRef.parentID]);
-					}
-					
-					$boneTransformVec.push($transform);
-					
-					//======================== Bone Drawing =======================
-					if (_spriterMC.showBones)
-					{
-						if (!_boneImages || _boneImages.length == 0)
+						$boneRef = $currentMainKey.boneRefs[i];
+						$key = $boneRef.key;
+						$transform = $key.modTransform.copyValues($key.originalTransform);
+						
+						//perform lerping
+						//based on play direction, figure out which key is the "next" key
+						$nextKey = ($playingForward) ? $key.next : $key.prev;
+						$propsAreDirty = ($playingForward) ? $key.nextPropsDirty : $key.prevPropsDirty;
+						if ($nextKey && $propsAreDirty)
 						{
-							generateBoneImages();
+							$tweenFactor = (_currentTime - $key.time) / ($nextKey.time - $key.time);
+							
+							//spin should be derived from the key you're coming from, not the key you're going to
+							//If _playDirection is backwards, we must derive the spin from the
+							//current key's previous key and reverse it. In this case, the previous key IS $nextKey
+							$spin = ($playingForward) ? $key.spin : $nextKey.spin * -1;
+							$transform.transformLerp($nextKey.originalTransform, $tweenFactor, $spin); //lerp with parent transform (nextkey.originalTransform)
 						}
 						
-						if (!$boneContainer) $boneContainer = new Sprite();
-						$boneImage 			= _boneImages[i];
-						$boneImage.x 		= $transform.x;
-						$boneImage.y 		= -$transform.y;
-						$boneImage.scaleX	= $transform.scaleX;
-						$boneImage.scaleY	= $transform.scaleY;
-						$boneImage.rotation = -1 * ($transform.angle * RADIAN_IN_DEGREE);
-						$boneContainer.addChild($boneImage);
-					}
-					else if($boneContainer)
-					{
-						if ($boneContainer.parent == this) $boneContainer.removeFromParent(true);
-					}
-					
-					//===================== End Bone Drawing ======================
-				}
-				
-				//create objects
-				$refLength = $currentMainKey.objectRefs.length;
-				for (i = 0; i < $refLength; i++) 
-				{	
-					$objRef = $currentMainKey.objectRefs[i];
-					$key = $objRef.key;
-					$transform = $key.modTransform.copyValues($key.originalTransform);
-					
-					//perform lerping
-					$nextKey = ($playingForward) ? $key.next : $key.prev;
-					$propsAreDirty = ($playingForward) ? $key.nextPropsDirty : $key.prevPropsDirty;
-					if ($nextKey && $propsAreDirty)
-					{
-						$tweenFactor = (_currentTime - $key.time) / ($nextKey.time - $key.time);
-						//spin should be derived from the key you're coming from, not the key you're going to
-						//If _playDirection is backwards, we must derive the spin from the
-						//current key's previous key and reverse it. In this case, the previous key IS $nextKey
-						$spin = ($playingForward) ? $key.spin : $nextKey.spin * -1;
-						$transform.transformLerp($nextKey.originalTransform, $tweenFactor, $spin);
-					}
-					
-					if ($objRef.parent)
-					{
-						$transform.applyParentTransform($boneTransformVec[$objRef.parentID]);
-					}
-					
-					//**********Adding stuff to stage************************
-					var $timelineID = $key.timeline.id;
-					$image = _timelineImages[$timelineID];
-					if ($image.parent != this)
-					{
-						addChild($image);
-						//must reset rotation and scale so we can accurately set the pivot point
-						//since the image was scaled/rotated in the previous frame (which throws off its width/height if we don't reset it)
-						$image.rotation = 0; 
-						$image.scaleX = $image.scaleY = 1;
-						$image.pivotX = $key.pivot.x * $image.width;
-						$image.pivotY = ((1 - $key.pivot.y) * $image.height);						
-					}
-					//it's already on the stage so don't add it, but update dirty props
-					else
-					{
-						$fileIsDirty = ($playingForward) ? $key.nextFileDirty : $key.prevFileDirty;
-						if ($fileIsDirty)
+						//apply parent transformation
+						if ($boneRef.parent)
 						{
-							//TODO: make this only update the texture so we can have more than one of the same texture
-							_timelineImages[$timelineID].texture = _spriterMC.textures[$key.folder][$key.file];
+							$transform.applyParentTransform($boneTransformVec[$boneRef.parentID]);
 						}
 						
-						//must reset rotation and scale so we can accurately set the pivot point
-						//since the image was scaled/rotated in the previous frame (which throws off its width/height if we don't reset it)
-						$pivotIsDirty = ($playingForward) ? $key.nextPivotDirty : $key.prevPivotDirty;
-						if ($pivotIsDirty)
+						$boneTransformVec.push($transform);
+						
+						//======================== Bone Drawing =======================
+						if (_spriterMC.showBones)
 						{
+							if (!_boneImages || _boneImages.length == 0)
+							{
+								generateBoneImages();
+							}
+							
+							if (!$boneContainer) $boneContainer = new Sprite();
+							$boneImage 			= _boneImages[i];
+							$boneImage.x 		= $transform.x;
+							$boneImage.y 		= -$transform.y;
+							$boneImage.scaleX	= $transform.scaleX;
+							$boneImage.scaleY	= $transform.scaleY;
+							$boneImage.rotation = -1 * ($transform.angle * RADIAN_IN_DEGREE);
+							$boneContainer.addChild($boneImage);
+						}
+						else if($boneContainer)
+						{
+							if ($boneContainer.parent == this) $boneContainer.removeFromParent(true);
+						}
+						
+						//===================== End Bone Drawing ======================
+					}
+					
+					//create objects
+					$refLength = $currentMainKey.objectRefs.length;
+					for (i = 0; i < $refLength; i++) 
+					{	
+						$objRef = $currentMainKey.objectRefs[i];
+						$key = $objRef.key;
+						$transform = $key.modTransform.copyValues($key.originalTransform);
+						
+						//perform lerping
+						$nextKey = ($playingForward) ? $key.next : $key.prev;
+						$propsAreDirty = ($playingForward) ? $key.nextPropsDirty : $key.prevPropsDirty;
+						if ($nextKey && $propsAreDirty)
+						{
+							$tweenFactor = (_currentTime - $key.time) / ($nextKey.time - $key.time);
+							//spin should be derived from the key you're coming from, not the key you're going to
+							//If _playDirection is backwards, we must derive the spin from the
+							//current key's previous key and reverse it. In this case, the previous key IS $nextKey
+							$spin = ($playingForward) ? $key.spin : $nextKey.spin * -1;
+							$transform.transformLerp($nextKey.originalTransform, $tweenFactor, $spin);
+						}
+						
+						if ($objRef.parent)
+						{
+							$transform.applyParentTransform($boneTransformVec[$objRef.parentID]);
+						}
+						
+						//**********Adding stuff to stage************************
+						var $timelineID = $key.timeline.id;
+						$image = _timelineImages[$timelineID];
+						if ($image.parent != this)
+						{
+							addChild($image);
+							//must reset rotation and scale so we can accurately set the pivot point
+							//since the image was scaled/rotated in the previous frame (which throws off its width/height if we don't reset it)
 							$image.rotation = 0; 
 							$image.scaleX = $image.scaleY = 1;
-							
-							//the pivots use UV coords, so this is a little tricky. 
-							//UV coords are 0,0 at bottom left, 1,1 at top right so we must do
-							//the math to translate into starling coordinate space
 							$image.pivotX = $key.pivot.x * $image.width;
-							$image.pivotY = ((1 - $key.pivot.y) * $image.height);
+							$image.pivotY = ((1 - $key.pivot.y) * $image.height);						
+						}
+						//it's already on the stage so don't add it, but update dirty props
+						else
+						{
+							$fileIsDirty = ($playingForward) ? $key.nextFileDirty : $key.prevFileDirty;
+							if ($fileIsDirty)
+							{
+								_timelineImages[$timelineID].texture = _spriterMC.textures[$key.folder][$key.file];
+							}
+							
+							//must reset rotation and scale so we can accurately set the pivot point
+							//since the image was scaled/rotated in the previous frame (which throws off its width/height if we don't reset it)
+							$pivotIsDirty = ($playingForward) ? $key.nextPivotDirty : $key.prevPivotDirty;
+							if ($pivotIsDirty)
+							{
+								$image.rotation = 0; 
+								$image.scaleX = $image.scaleY = 1;
+								
+								//the pivots use UV coords, so this is a little tricky. 
+								//UV coords are 0,0 at bottom left, 1,1 at top right so we must do
+								//the math to translate into starling coordinate space
+								$image.pivotX = $key.pivot.x * $image.width;
+								$image.pivotY = ((1 - $key.pivot.y) * $image.height);
+							}
+							
+							//swap depths here if it's needed
+							if (getChildAt(i) != $image)
+							{
+								swapChildren(getChildAt(i), $image);
+							}
 						}
 						
-						//TODO: swap depths here if it's needed
-						
+						$image.scaleX = $transform.scaleX;
+						$image.scaleY = $transform.scaleY;
+						$image.x = $transform.x;
+						$image.y = -$transform.y;
+						$image.rotation = -1*($transform.angle * RADIAN_IN_DEGREE);	
 					}
 					
-					$image.scaleX = $transform.scaleX;
-					$image.scaleY = $transform.scaleY;
-					$image.x = $transform.x;
-					$image.y = -$transform.y;
-					$image.rotation = -1*($transform.angle * RADIAN_IN_DEGREE);	
+					if (_spriterMC.showBones) addChild($boneContainer);
 				}
-				
-				if (_spriterMC.showBones) addChild($boneContainer);
 			}
 		}
 		

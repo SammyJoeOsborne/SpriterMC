@@ -20,7 +20,6 @@ package com.sammyjoeosborne.spriter.load
 		public function get simpleLoadItem():SimpleLoadItem { return _simpleLoadItem; }
 		public function set simpleLoadItem(value:SimpleLoadItem):void { 
 			_simpleLoadItem = value;
-			url = _simpleLoadItem.url;
 		}
 		
 	}

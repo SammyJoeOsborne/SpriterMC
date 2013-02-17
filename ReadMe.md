@@ -4,7 +4,7 @@ http://www.sammyjoeosborne.com/SpriterMC
 
 SpriterMC is a Starling implementation for importing skeletal (and non-skeletal) animations generated with Spriter (http://www.brashmonkey.com/spriter.htm), complete with a familiar API mimicking Starling MovieClip. Features include SpriterMC generation from an existing TextureAtlas or individual assets (a TextureAtlas is generated from assets dynamicall), bone support, ability to create multiple instances with low overhead, Framerate-independant and adjustable playback speed and playback direction, swap entire texture sets at runtime, and more. It currently supports all features of the Spriter file format (version a4.1), with future support planned for any subsequent changes to the SCML format.
 
-## Version .85
+## Version .87
 
 ### Features
 * Generates a SpriterMC (similar to a Starling MovieClip) from a provided SCML filepath (loading of the SCML file is handled for you)
@@ -20,7 +20,7 @@ SpriterMC is a Starling implementation for importing skeletal (and non-skeletal)
 * Queued commands that will execute once the SpriterMC is loaded and ready for display, so you don't have to wait on an event listener to start issuing calls such as play(), playbackSpeed = -1.5, currentFrame(), setAnimationByName(), etc. (You can still add an event listener to wait for the SpriterMC.SPRITER_MC_READY if you need to)
 
 ### TODO List
-* Add ability to switch fluidly between Animations (it will tween between them instead of instantly switching as it currently does)
+* Add ability to switch fluidly between Animations (it will tween between them instead of instantly switching as it currently does). Should be available next release.
 * Optimize and cleanup code
 * Add better Error checking
 * Possibly add an adjustable rootPath variable to correct any relative pathing issues from the SWF when loading individual assets
