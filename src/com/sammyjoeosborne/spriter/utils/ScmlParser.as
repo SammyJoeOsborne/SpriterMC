@@ -23,7 +23,7 @@ package com.sammyjoeosborne.spriter.utils
 	public class ScmlParser extends EventDispatcher
 	{
 		static public const FILES_ESTABLISHED:String = "filesEstablished";
-		var _scmlData:ScmlData;
+		private var _scmlData:ScmlData;
 		
 		public function ScmlParser($scmlData:ScmlData) 
 		{
@@ -312,7 +312,7 @@ package com.sammyjoeosborne.spriter.utils
 			}
 		}
 		
-		public function loadSCML($path:String)
+		public function loadSCML($path:String):void
 		{
 			var $loader:URLLoader = new URLLoader();
 			$loader.addEventListener(Event.COMPLETE, onSCMLComplete);

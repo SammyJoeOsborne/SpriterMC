@@ -200,7 +200,7 @@ package com.sammyjoeosborne.spriter
 		 * @param	$frameID
 		 * @param	$sound
 		 */
-		public function setFrameSound($frameID:uint, $sound:Sound)
+		public function setFrameSound($frameID:uint, $sound:Sound):void
 		{
 			if ($frameID < mainKeys.length)
 			{
@@ -426,7 +426,7 @@ package com.sammyjoeosborne.spriter
 		/******************************
 		* Private (internal) functions
 		*******************************/
-		private var $updated
+		private var $updated:Boolean;
 		private var $currentMainKey:MainKey;
 		private var $objRef:ObjectRef;
 		private var $timeline:Timeline;
@@ -464,7 +464,7 @@ package com.sammyjoeosborne.spriter
 					
 					//Remove all children that don't belong
 					$toRemoveLength = $currentMainKey.timelineIDsToRemove.length;
-					var $timelineIDsToRemove = $currentMainKey.timelineIDsToRemove;
+					var $timelineIDsToRemove:Vector.<uint> = $currentMainKey.timelineIDsToRemove;
 					for (var j:int = 0; j < $toRemoveLength; j++) 
 					{
 						$image = _timelineImages[$timelineIDsToRemove[j]];
@@ -558,7 +558,7 @@ package com.sammyjoeosborne.spriter
 						}
 						
 						//**********Adding stuff to stage************************
-						var $timelineID = $key.timeline.id;
+						var $timelineID:uint = $key.timeline.id;
 						$image = _timelineImages[$timelineID];
 						if ($image.parent != this)
 						{
