@@ -575,7 +575,11 @@ package com.sammyjoeosborne.spriter
 							$fileIsDirty = ($playingForward) ? $key.nextFileDirty : $key.prevFileDirty;
 							if ($fileIsDirty)
 							{
-								_timelineImages[$timelineID].texture = _spriterMC.textures[$key.folder][$key.file];
+								var tx:Texture = _spriterMC.textures[$key.folder][$key.file];
+								if (tx != $image.texture) {
+									$image.texture = tx;
+									$image.readjustSize();
+								}
 							}
 							
 							//must reset rotation and scale so we can accurately set the pivot point
