@@ -41,8 +41,11 @@ package com.sammyjoeosborne.spriter.utils
 			parseScml(_scmlData);
 		}
 		
-		private function parseScml($scmlData:ScmlData):void
+		public function parseScml($scmlData:ScmlData = null):void
 		{
+			if($scmlData)
+				_scmlData = $scmlData;
+			
 			createFoldersAndFiles($scmlData);
 			trace("Scml files and folders parsed. Sending to TexturePack");
 			dispatchEventWith(FILES_ESTABLISHED, false);

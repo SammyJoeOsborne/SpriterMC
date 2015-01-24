@@ -104,7 +104,7 @@ package com.sammyjoeosborne.spriter
 			}
 			
 			applyTexturePack($texturePack);
-			//_texturePack = $texturePack;
+			_texturePack = $texturePack;
 			if (_scmlData.isReady)
 			{
 				createAnimations();
