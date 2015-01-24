@@ -128,7 +128,7 @@ package com.sammyjoeosborne.spriter.utils
 				
 				//create timeline objects
 				$timelineList = $animationList[i].timeline;
-				for (var k:int = 0; k < $timelineList.length(); k++) 
+				for (var k:int = 0, tmln:int = $timelineList.length(); k < tmln; k++) 
 				{
 					$timeline = new Timeline(parseInt($timelineList[k].@id), ($timelineList[k].hasOwnProperty("@name")) ? $timelineList[k].@name : "");
 					
@@ -136,7 +136,7 @@ package com.sammyjoeosborne.spriter.utils
 					
 					//create key objects within the timeline
 					$keyList = $timelineList[k].key;
-					for (var j:int = 0; j < $keyList.length(); j++) 
+					for (var j:int = 0, kln:int = $keyList.length(); j < kln; j++) 
 					{
 						$keyXML = $keyList[j];
 						//either bone or object
@@ -200,8 +200,10 @@ package com.sammyjoeosborne.spriter.utils
 								$key.prevPivotDirty         = !$key.pivot.equals($key.prev.pivot);
 								$key.prev.nextPivotDirty    = !$key.prev.pivot.equals($key.pivot);
 								
-								$key.prevFileDirty			= ($key.file == $key.prev.file);
-								$key.prev.nextFileDirty		= ($key.prev.file == $key.file);
+								// first and last keys are always with dirty flags true
+								// this way we gurantee the abimation will start with the correct state on it's first frame
+								$key.prevFileDirty          = ($key.file != $key.prev.file || $key.folder != $key.prev.folder || j == kln - 1);
+								$key.prev.nextFileDirty     = ($key.prev.file != $key.file || $key.prev.folder != $key.folder || j == 0);
 							}
 						}
 						
