@@ -193,12 +193,12 @@ package com.sammyjoeosborne.spriter.utils
 						//and also go back to the previous frame and determine if the values are different from this key's
 						if($key.prev)
 						{
-							$key.prevPropsDirty 		= !$key.arePropsEqual($key.prev);
-							$key.prev.nextPropsDirty 	= !$key.prev.arePropsEqual($key);
+							$key.prevPropsDirty           = !$key.arePropsEqual($key.prev);
+							$key.prev.nextPropsDirty      = !$key.prev.arePropsEqual($key);
 							if(!$key.timeline.isBone)
 							{
-								$key.prevPivotDirty 		= !$key.pivot.equals($key.prev.pivot);
-								$key.prev.nextPivotDirty 	= !$key.prev.pivot.equals($key.pivot);
+								$key.prevPivotDirty         = !$key.pivot.equals($key.prev.pivot);
+								$key.prev.nextPivotDirty    = !$key.prev.pivot.equals($key.pivot);
 								
 								$key.prevFileDirty			= ($key.file == $key.prev.file);
 								$key.prev.nextFileDirty		= ($key.prev.file == $key.file);
