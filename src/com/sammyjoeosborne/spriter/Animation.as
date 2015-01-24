@@ -136,7 +136,6 @@ package com.sammyjoeosborne.spriter
 		{
 			if (!_isPlaying || _playbackSpeed == 0 || !_spriterMC.isReady) return;
 			
-			//trace("adjusting for playback speed")
 			$time *= 1000 * _playbackSpeed; //turn the additional time into milliseconds, then adjust for proper playbackSpeed
 			_currentTime += $time * _playDirection;
 			normalizeCurrentTime();
@@ -453,7 +452,7 @@ package com.sammyjoeosborne.spriter
 				if (!_isTransitioning)
 				{
 					$updated = updateCurrentFrame(); //did the current frame change or are we just further along in the same frame
-					$currentMainKey= getCurrentFrame();
+					$currentMainKey = getCurrentFrame();
 					if ($updated)
 					{
 						callFrameCallbacks(_currentKeyIndex);
@@ -568,7 +567,7 @@ package com.sammyjoeosborne.spriter
 							$image.rotation = 0; 
 							$image.scaleX = $image.scaleY = 1;
 							$image.pivotX = $key.pivot.x * $image.width;
-							$image.pivotY = ((1 - $key.pivot.y) * $image.height);						
+							$image.pivotY = ((1 - $key.pivot.y) * $image.height);
 						}
 						//it's already on the stage so don't add it, but update dirty props
 						else
