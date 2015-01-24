@@ -77,7 +77,7 @@ package com.sammyjoeosborne.spriter
 		private var _currentKeyIndex:int = 0;
 		private var _currentTime:int = 0;
 		private var _isPlaying:Boolean = false;
-		private var _isTransitioning:Boolean = false;
+		private var _isTransitioning:Boolean = false; // currently does nothing :(
 		private var _playDirection:int = 1; //could be 1 for forward, -1 for backward
 		private var _playbackSpeed:Number = 1; //percentage for how fast this animation should play, 1 being the default 100%
 		
