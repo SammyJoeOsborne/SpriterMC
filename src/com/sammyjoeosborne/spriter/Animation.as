@@ -140,21 +140,16 @@ package com.sammyjoeosborne.spriter
 			_currentTime += $time * _playDirection;
 			normalizeCurrentTime();
 			//if we aren't looping and we're going over the length of the animation
-			if (!_loop && _isPlaying)
+			if (!_loop)
 			{
 				//if not looping, only update if current time is not past the last frame's time (whether we're playing forward or backward)
 				//if we're playing forward and the current time is >= the last keyframe's time, do not update. Just return.
 				if (_playDirection >= 0 && (_currentTime >= mainKeys[_lastFrameIndex].time)) return;
 				//if we're playing backward and current time is somehow less than 0, don't update. Just return.
 				else if (_playDirection < 0 && (_currentTime < 0)) return;
-				
-				updateVisuals();
 			}
-			//if the animation hasn't been stopped by this point, carry on
-			if(_loop)
-			{
-				updateVisuals();
-			}
+			
+			updateVisuals();
 		}
 		
 		public function getNextFrame():MainKey
