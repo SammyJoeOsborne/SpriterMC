@@ -40,8 +40,16 @@ package com.sammyjoeosborne.spriter.models
 		
 		public function toString():String
 		{
-			return ("id: " + _id + " time: " + _time + " spin: " + _spin + " x: " + _originalTransform.x + " y: " + _originalTransform.y
-				+ " angle: " + _originalTransform.angle + " folder: " + _folder + " file: " + _file);
+			return ("id: " + _id 
+				+ " time: " + _time 
+				+ " spin: " + _spin 
+				+ " x: " + _originalTransform.x 
+				+ " y: " + _originalTransform.y
+				+ " angle: " + _originalTransform.angle 
+				+ " folder: " + _folder 
+				+ " file: " + _file
+				+ " nextFileDirty: " + nextFileDirty 
+				+ " prevFileDirty: " + prevFileDirty);
 		}
 		
 		public function arePropsEqual($key:Key):Boolean 
