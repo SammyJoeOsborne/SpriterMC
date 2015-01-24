@@ -71,12 +71,24 @@ package com.sammyjoeosborne.spriter.utils
 				$fileLength = $filenameXMLList.length();
 				for (var k:uint = 0; k < $fileLength; k++)
 				{
-					$folder.addFile(new File(k, $filenameXMLList[k].@name.toString(), Number($filenameXMLList[k].@width), Number($filenameXMLList[k].@height)));
+					$folder.addFile(new File(k, $filenameXMLList[k].@name.toString(), Number($filenameXMLList[k].@width), Number($filenameXMLList[k].@height), createPivot($filenameXMLList[k])));
 					//$filenameVec.push(Utils.getFileNameWithoutExtension($filenameXMLList[k].@name.toString()));
 				}
 				
 				$scmlData.folders.push($folder);
 			}
+		}
+		
+		private function createPivot(objects:Object):Point
+		{
+			var $hasPivotX:Boolean = objects.hasOwnProperty("@pivot_x");
+			var $hasPivotY:Boolean = objects.hasOwnProperty("@pivot_y");
+			
+			if (!$hasPivotX && !$hasPivotY)
+				return null;
+			
+			return new Point($hasPivotX ? Number(objects.@pivot_x) : 0,
+			                 $hasPivotY ? Number(objects.@pivot_y) : 0);
 		}
 		
 		private function createTimelines($scmlData:ScmlData):void
@@ -97,8 +109,6 @@ package com.sammyjoeosborne.spriter.utils
 			var $spin:int;
 			var $folder:uint;
 			var $file:uint;
-			var $pivotX:Number;
-			var $pivotY:Number;
 			var $angle:Number;
 			
 			var $numAnimations:uint = $animationList.length();
@@ -149,9 +159,7 @@ package com.sammyjoeosborne.spriter.utils
 						{
 							$key.folder =  parseInt($keyXML.object.@folder);
 							$key.file = parseInt($keyXML.object.@file);
-							$pivotX = ($keyXML.object.hasOwnProperty("@pivot_x")) ? Number($keyXML.object.@pivot_x) : 0;
-							$pivotY = ($keyXML.object.hasOwnProperty("@pivot_y")) ? Number($keyXML.object.@pivot_y) : 1;
-							$key.pivot = new Point($pivotX, $pivotY);
+							$key.pivot = createPivot($keyXML.object) || _scmlData.folders[$key.folder].files[$key.file].pivot;
 						}
 						else
 						{
