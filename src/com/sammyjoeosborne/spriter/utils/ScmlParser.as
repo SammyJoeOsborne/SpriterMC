@@ -24,6 +24,7 @@ package com.sammyjoeosborne.spriter.utils
 	{
 		static public const FILES_ESTABLISHED:String = "filesEstablished";
 		private var _scmlData:ScmlData;
+		public var skeletonScale:Number = 1.0;
 		
 		public function ScmlParser($scmlData:ScmlData) 
 		{
@@ -170,8 +171,8 @@ package com.sammyjoeosborne.spriter.utils
 							$timeline.isBone = true;
 						}
 						
-						$key.x = ($keyXML[$prop].hasOwnProperty("@x")) ? Number($keyXML[$prop].@x) : 0;
-						$key.y = ($keyXML[$prop].hasOwnProperty("@y")) ? Number($keyXML[$prop].@y) : 0;
+						$key.x = ($keyXML[$prop].hasOwnProperty("@x")) ? Number($keyXML[$prop].@x) * skeletonScale : 0;
+						$key.y = ($keyXML[$prop].hasOwnProperty("@y")) ? Number($keyXML[$prop].@y) * skeletonScale : 0;
 						if ($keyXML[$prop].hasOwnProperty("@angle"))
 						{
 							$key.angle =  Number($keyXML[$prop].@angle);
