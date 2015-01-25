@@ -91,7 +91,7 @@ package com.sammyjoeosborne.spriter.utils
 				return null;
 			
 			return new Point($hasPivotX ? Number(objects.@pivot_x) : 0,
-			                 $hasPivotY ? Number(objects.@pivot_y) : 0);
+			                 $hasPivotY ? Number(objects.@pivot_y) : 1);
 		}
 		
 		private function createTimelines($scmlData:ScmlData):void
