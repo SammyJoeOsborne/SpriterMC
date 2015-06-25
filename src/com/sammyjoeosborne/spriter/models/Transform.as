@@ -69,7 +69,7 @@ package com.sammyjoeosborne.spriter.models
 		}
 		
 		[Inline]
-		final public function transformLerp($transform:Transform, $tweenFactor:Number, $spin:int)
+		final public function transformLerp($transform:Transform, $tweenFactor:Number, $spin:int):void
 		{
 			_x = lerp(_x, $transform.x, $tweenFactor);
 			_y = lerp(_y, $transform.y, $tweenFactor);
@@ -108,7 +108,7 @@ package com.sammyjoeosborne.spriter.models
 		}
 		
 		[Inline]
-		final public function applyParentTransform($parent:Transform)
+		final public function applyParentTransform($parent:Transform):void
 		{
 			_x *= $parent.scaleX;
 			_y *= $parent.scaleY;

@@ -52,7 +52,7 @@ package com.sammyjoeosborne.spriter.load
 			$simpleLoader.load(new URLRequest($simpleLoader.simpleLoadItem.url));
 		}
 		
-		private function itemCompleteHandler($e:Event)
+		private function itemCompleteHandler($e:Event):void
 		{
 			var $simpleLoader:SimpleLoader = $e.target.loader as SimpleLoader;
 			_totalItemsLoaded++;

@@ -77,7 +77,7 @@ package com.sammyjoeosborne.spriter
 		private var _currentKeyIndex:int = 0;
 		private var _currentTime:int = 0;
 		private var _isPlaying:Boolean = false;
-		private var _isTransitioning:Boolean = false;
+		private var _isTransitioning:Boolean = false; // currently does nothing :(
 		private var _playDirection:int = 1; //could be 1 for forward, -1 for backward
 		private var _playbackSpeed:Number = 1; //percentage for how fast this animation should play, 1 being the default 100%
 		
@@ -136,26 +136,20 @@ package com.sammyjoeosborne.spriter
 		{
 			if (!_isPlaying || _playbackSpeed == 0 || !_spriterMC.isReady) return;
 			
-			//trace("adjusting for playback speed")
 			$time *= 1000 * _playbackSpeed; //turn the additional time into milliseconds, then adjust for proper playbackSpeed
 			_currentTime += $time * _playDirection;
 			normalizeCurrentTime();
 			//if we aren't looping and we're going over the length of the animation
-			if (!_loop && _isPlaying)
+			if (!_loop)
 			{
 				//if not looping, only update if current time is not past the last frame's time (whether we're playing forward or backward)
 				//if we're playing forward and the current time is >= the last keyframe's time, do not update. Just return.
 				if (_playDirection >= 0 && (_currentTime >= mainKeys[_lastFrameIndex].time)) return;
 				//if we're playing backward and current time is somehow less than 0, don't update. Just return.
 				else if (_playDirection < 0 && (_currentTime < 0)) return;
-				
-				updateVisuals();
 			}
-			//if the animation hasn't been stopped by this point, carry on
-			if(_loop)
-			{
-				updateVisuals();
-			}
+			
+			updateVisuals();
 		}
 		
 		public function getNextFrame():MainKey
@@ -200,7 +194,7 @@ package com.sammyjoeosborne.spriter
 		 * @param	$frameID
 		 * @param	$sound
 		 */
-		public function setFrameSound($frameID:uint, $sound:Sound)
+		public function setFrameSound($frameID:uint, $sound:Sound):void
 		{
 			if ($frameID < mainKeys.length)
 			{
@@ -426,7 +420,7 @@ package com.sammyjoeosborne.spriter
 		/******************************
 		* Private (internal) functions
 		*******************************/
-		private var $updated
+		private var $updated:Boolean;
 		private var $currentMainKey:MainKey;
 		private var $objRef:ObjectRef;
 		private var $timeline:Timeline;
@@ -453,7 +447,7 @@ package com.sammyjoeosborne.spriter
 				if (!_isTransitioning)
 				{
 					$updated = updateCurrentFrame(); //did the current frame change or are we just further along in the same frame
-					$currentMainKey= getCurrentFrame();
+					$currentMainKey = getCurrentFrame();
 					if ($updated)
 					{
 						callFrameCallbacks(_currentKeyIndex);
@@ -464,7 +458,7 @@ package com.sammyjoeosborne.spriter
 					
 					//Remove all children that don't belong
 					$toRemoveLength = $currentMainKey.timelineIDsToRemove.length;
-					var $timelineIDsToRemove = $currentMainKey.timelineIDsToRemove;
+					var $timelineIDsToRemove:Vector.<uint> = $currentMainKey.timelineIDsToRemove;
 					for (var j:int = 0; j < $toRemoveLength; j++) 
 					{
 						$image = _timelineImages[$timelineIDsToRemove[j]];
@@ -558,7 +552,7 @@ package com.sammyjoeosborne.spriter
 						}
 						
 						//**********Adding stuff to stage************************
-						var $timelineID = $key.timeline.id;
+						var $timelineID:uint = $key.timeline.id;
 						$image = _timelineImages[$timelineID];
 						if ($image.parent != this)
 						{
@@ -568,7 +562,7 @@ package com.sammyjoeosborne.spriter
 							$image.rotation = 0; 
 							$image.scaleX = $image.scaleY = 1;
 							$image.pivotX = $key.pivot.x * $image.width;
-							$image.pivotY = ((1 - $key.pivot.y) * $image.height);						
+							$image.pivotY = ((1 - $key.pivot.y) * $image.height);
 						}
 						//it's already on the stage so don't add it, but update dirty props
 						else
@@ -576,7 +570,11 @@ package com.sammyjoeosborne.spriter
 							$fileIsDirty = ($playingForward) ? $key.nextFileDirty : $key.prevFileDirty;
 							if ($fileIsDirty)
 							{
-								_timelineImages[$timelineID].texture = _spriterMC.textures[$key.folder][$key.file];
+								var tx:Texture = _spriterMC.textures[$key.folder][$key.file];
+								if (tx != $image.texture) {
+									$image.texture = tx;
+									$image.readjustSize();
+								}
 							}
 							
 							//must reset rotation and scale so we can accurately set the pivot point

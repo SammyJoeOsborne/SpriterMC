@@ -23,7 +23,7 @@ package com.sammyjoeosborne.spriter.utils
 	public class ScmlParser extends EventDispatcher
 	{
 		static public const FILES_ESTABLISHED:String = "filesEstablished";
-		var _scmlData:ScmlData;
+		private var _scmlData:ScmlData;
 		
 		public function ScmlParser($scmlData:ScmlData) 
 		{
@@ -41,8 +41,11 @@ package com.sammyjoeosborne.spriter.utils
 			parseScml(_scmlData);
 		}
 		
-		private function parseScml($scmlData:ScmlData):void
+		public function parseScml($scmlData:ScmlData = null):void
 		{
+			if($scmlData)
+				_scmlData = $scmlData;
+			
 			createFoldersAndFiles($scmlData);
 			trace("Scml files and folders parsed. Sending to TexturePack");
 			dispatchEventWith(FILES_ESTABLISHED, false);
@@ -71,12 +74,24 @@ package com.sammyjoeosborne.spriter.utils
 				$fileLength = $filenameXMLList.length();
 				for (var k:uint = 0; k < $fileLength; k++)
 				{
-					$folder.addFile(new File(k, $filenameXMLList[k].@name.toString(), Number($filenameXMLList[k].@width), Number($filenameXMLList[k].@height)));
+					$folder.addFile(new File(k, $filenameXMLList[k].@name.toString(), Number($filenameXMLList[k].@width), Number($filenameXMLList[k].@height), createPivot($filenameXMLList[k])));
 					//$filenameVec.push(Utils.getFileNameWithoutExtension($filenameXMLList[k].@name.toString()));
 				}
 				
 				$scmlData.folders.push($folder);
 			}
+		}
+		
+		private function createPivot(objects:Object):Point
+		{
+			var $hasPivotX:Boolean = objects.hasOwnProperty("@pivot_x");
+			var $hasPivotY:Boolean = objects.hasOwnProperty("@pivot_y");
+			
+			if (!$hasPivotX && !$hasPivotY)
+				return null;
+			
+			return new Point($hasPivotX ? Number(objects.@pivot_x) : 0,
+			                 $hasPivotY ? Number(objects.@pivot_y) : 1);
 		}
 		
 		private function createTimelines($scmlData:ScmlData):void
@@ -97,8 +112,6 @@ package com.sammyjoeosborne.spriter.utils
 			var $spin:int;
 			var $folder:uint;
 			var $file:uint;
-			var $pivotX:Number;
-			var $pivotY:Number;
 			var $angle:Number;
 			
 			var $numAnimations:uint = $animationList.length();
@@ -115,7 +128,7 @@ package com.sammyjoeosborne.spriter.utils
 				
 				//create timeline objects
 				$timelineList = $animationList[i].timeline;
-				for (var k:int = 0; k < $timelineList.length(); k++) 
+				for (var k:int = 0, tmln:int = $timelineList.length(); k < tmln; k++) 
 				{
 					$timeline = new Timeline(parseInt($timelineList[k].@id), ($timelineList[k].hasOwnProperty("@name")) ? $timelineList[k].@name : "");
 					
@@ -123,7 +136,7 @@ package com.sammyjoeosborne.spriter.utils
 					
 					//create key objects within the timeline
 					$keyList = $timelineList[k].key;
-					for (var j:int = 0; j < $keyList.length(); j++) 
+					for (var j:int = 0, kln:int = $keyList.length(); j < kln; j++) 
 					{
 						$keyXML = $keyList[j];
 						//either bone or object
@@ -149,9 +162,7 @@ package com.sammyjoeosborne.spriter.utils
 						{
 							$key.folder =  parseInt($keyXML.object.@folder);
 							$key.file = parseInt($keyXML.object.@file);
-							$pivotX = ($keyXML.object.hasOwnProperty("@pivot_x")) ? Number($keyXML.object.@pivot_x) : 0;
-							$pivotY = ($keyXML.object.hasOwnProperty("@pivot_y")) ? Number($keyXML.object.@pivot_y) : 1;
-							$key.pivot = new Point($pivotX, $pivotY);
+							$key.pivot = createPivot($keyXML.object) || _scmlData.folders[$key.folder].files[$key.file].pivot;
 						}
 						else
 						{
@@ -182,15 +193,17 @@ package com.sammyjoeosborne.spriter.utils
 						//and also go back to the previous frame and determine if the values are different from this key's
 						if($key.prev)
 						{
-							$key.prevPropsDirty 		= !$key.arePropsEqual($key.prev);
-							$key.prev.nextPropsDirty 	= !$key.prev.arePropsEqual($key);
+							$key.prevPropsDirty           = !$key.arePropsEqual($key.prev);
+							$key.prev.nextPropsDirty      = !$key.prev.arePropsEqual($key);
 							if(!$key.timeline.isBone)
 							{
-								$key.prevPivotDirty 		= !$key.pivot.equals($key.prev.pivot);
-								$key.prev.nextPivotDirty 	= !$key.prev.pivot.equals($key.pivot);
+								$key.prevPivotDirty         = !$key.pivot.equals($key.prev.pivot);
+								$key.prev.nextPivotDirty    = !$key.prev.pivot.equals($key.pivot);
 								
-								$key.prevFileDirty			= ($key.file == $key.prev.file);
-								$key.prev.nextFileDirty		= ($key.prev.file == $key.file);
+								// first and last keys are always with dirty flags true
+								// this way we gurantee the abimation will start with the correct state on it's first frame
+								$key.prevFileDirty          = ($key.file != $key.prev.file || $key.folder != $key.prev.folder || j == kln - 1);
+								$key.prev.nextFileDirty     = ($key.prev.file != $key.file || $key.prev.folder != $key.folder || j == 0);
 							}
 						}
 						
@@ -312,7 +325,7 @@ package com.sammyjoeosborne.spriter.utils
 			}
 		}
 		
-		public function loadSCML($path:String)
+		public function loadSCML($path:String):void
 		{
 			var $loader:URLLoader = new URLLoader();
 			$loader.addEventListener(Event.COMPLETE, onSCMLComplete);

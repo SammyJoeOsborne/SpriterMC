@@ -64,6 +64,8 @@ package com.sammyjoeosborne.spriter.data
 	{
 		static public const TEXTURE_PACK_READY:String = "TexturePackReady";
 		
+		public var fullPathAsName:Boolean = true;
+		
 		private var _name:String;
 		private var _textureAtlas:TextureAtlas;
 		private var _folders:Vector.<Folder> = new Vector.<Folder>();
@@ -269,9 +271,11 @@ package com.sammyjoeosborne.spriter.data
 		
 		private function getFileNameWithoutExtension($file:String):String
 		{
-			/*var nameStart:int = $file.lastIndexOf("/");
-			nameStart = (nameStart == -1) ? 0 : nameStart + 1;*/
-			var $nameStart:int = 0;
+			var $nameStart:int;
+			if (!fullPathAsName) {
+				$nameStart = $file.lastIndexOf("/");
+				$nameStart = ($nameStart == -1) ? 0 : $nameStart + 1;
+			}
 			
 			var $nameEnd:int = $file.lastIndexOf(".");
 			$nameEnd = ($nameEnd == -1) ? $file.length : $nameEnd;
