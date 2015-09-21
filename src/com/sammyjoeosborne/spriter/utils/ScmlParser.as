@@ -24,6 +24,7 @@ package com.sammyjoeosborne.spriter.utils
 	{
 		static public const FILES_ESTABLISHED:String = "filesEstablished";
 		private var _scmlData:ScmlData;
+		public var skeletonScale:Number = 1.0;
 		
 		public function ScmlParser($scmlData:ScmlData) 
 		{
@@ -170,8 +171,8 @@ package com.sammyjoeosborne.spriter.utils
 							$timeline.isBone = true;
 						}
 						
-						$key.x = ($keyXML[$prop].hasOwnProperty("@x")) ? Number($keyXML[$prop].@x) : 0;
-						$key.y = ($keyXML[$prop].hasOwnProperty("@y")) ? Number($keyXML[$prop].@y) : 0;
+						$key.x = ($keyXML[$prop].hasOwnProperty("@x")) ? Number($keyXML[$prop].@x) * skeletonScale : 0;
+						$key.y = ($keyXML[$prop].hasOwnProperty("@y")) ? Number($keyXML[$prop].@y) * skeletonScale : 0;
 						if ($keyXML[$prop].hasOwnProperty("@angle"))
 						{
 							$key.angle =  Number($keyXML[$prop].@angle);
@@ -308,20 +309,51 @@ package com.sammyjoeosborne.spriter.utils
 					$animationData.mainKeys.push($mainKey);
 				}
 				
-				//if the last keyframe doesn't fall at the very end of the animation, clone it and
-				//insert it at the end so the last frame holds until the end of the animation
+				//if the last keyframe doesn't fall at the very end of the animation, 
+				//we duplicate to the end the relevant key (according looping flag).
+				//TODO: those cases should be handled directly by the animator.
 				if ($animationData.mainKeys[k-1].time < $animationData.totalTime)
 				{
-					var $endingKey:MainKey = $animationData.mainKeys[k-1].clone();
-					$endingKey.id++;
-					$endingKey.time = $animationData.totalTime;
-					$animationData.mainKeys.push($endingKey);
-					//trace("there was no ending frame. Adding mainKey at " + $animation.totalTime);
+					var $endingKey:MainKey;
+					
+					//in case of looping animation, the first key of the timeline is cloned to the end
+					if ($animationData.loop) 
+					{
+						//duplicate timelines keys
+						$timelineLength = $animationData.timelines.length;
+						for (var tli:int = 0; tli < $timelineLength; tli++) 
+						{
+							var $tl:Timeline = $animationData.timelines[tli];
+							var $firstKey:Key = $tl.keys[0];
+							var $lastKey:Key = $tl.keys[$tl.keys.length - 1];
+							var $clonedKey:Key = $firstKey.clone();
+							$clonedKey.id = $lastKey.id + 1;
+							$clonedKey.time = $animationData.totalTime;
+							$clonedKey.next = $firstKey;
+							$clonedKey.prev = $lastKey;
+							$firstKey.prev = $clonedKey;
+							$lastKey.next = $clonedKey;
+							$tl.keys.push($clonedKey);
+						}
+						
+						//duplicate first main key
+						$endingKey = $animationData.mainKeys[0].clone();
+						$endingKey.id = $animationData.mainKeys[k-1].id + 1;
+						$endingKey.time = $animationData.totalTime;
+						$animationData.mainKeys.push($endingKey);
+						trace("There was no ending frame. Duplicate first key at the end with id " + $endingKey.id);
+					}
+					//in case of non-looping animation, the last key of the timeline is cloned to the end
+					else 
+					{
+						//duplicate last main key
+						$endingKey = $animationData.mainKeys[k-1].clone();
+						$endingKey.id = $animationData.mainKeys[k-1].id + 1;
+						$endingKey.time = $animationData.totalTime;
+						$animationData.mainKeys.push($endingKey);
+						trace("There was no ending frame. Duplicate last key at the end with id " + $endingKey.id);
+					}
 				}
-				/*else
-				{
-					trace("key fell on last frame. not adding ending frame.");
-				}*/
 			}
 		}
 		

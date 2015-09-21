@@ -58,8 +58,10 @@ package com.sammyjoeosborne.spriter.models
 		}
 		
 		public function get id():uint { return _id; }
+		public function set id(value:uint):void { _id = value; }
 		
 		public function get time():uint { return _time; }
+		public function set time(value:uint):void { _time = value; }
 		
 		public function get spin():int { return _spin; }
 		
@@ -129,6 +131,23 @@ package com.sammyjoeosborne.spriter.models
 		
 		public function get modTransform():Transform { return _modTransform; }
 		public function set modTransform(value:Transform):void { _modTransform = value; }
+		
+		public function clone():Key
+		{
+			var $cKey:Key = new Key(id, time, spin);
+			$cKey.folder = folder;
+			$cKey.file = file;
+			$cKey.timeline = timeline;
+			
+			$cKey.x = x;
+			$cKey.y = y;
+			$cKey.pivot = pivot;
+			$cKey.angle = angle;
+			$cKey.scaleX = scaleX;
+			$cKey.scaleY = scaleY;
+			
+			return $cKey;
+		}
 	}
 
 }
