@@ -672,15 +672,12 @@ package com.sammyjoeosborne.spriter
 				//if playing forward and time is past length, set current time to what it should be
 				if (_playDirection >= 0) 
 				{
-					
-					
-					while (_currentTime > totalTime)
+					//in looping animation, last key equals first key, so when the end is reached we must jump 
+					//to the first key to avoid time computational issues
+					while (_currentTime >= totalTime)
 					{
 						_currentTime = _currentTime - totalTime;
 					}
-					
-					//if (_currentTime > totalTime)	_currentTime = _currentTime - totalTime;	
-					
 				}
 				//if playing backward and time is below 0, set current time to what it should be
 				else if (_playDirection < 0)
